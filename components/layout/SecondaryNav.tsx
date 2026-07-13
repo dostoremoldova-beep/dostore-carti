@@ -7,12 +7,12 @@ export function SecondaryNav() {
       aria-label="Navigație principală"
       className="hidden bg-navy md:block"
     >
-      <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3 text-sm font-medium text-cream/90 sm:px-6 lg:px-8">
+      <div className="mx-auto flex max-w-7xl items-center gap-6 overflow-x-auto px-4 py-3 text-sm font-medium text-cream/90 [scrollbar-width:none] sm:px-6 lg:px-8 [&::-webkit-scrollbar]:hidden">
         {secondaryNavLinks.map((link) => (
           <Link
             key={link.href}
             href={link.href}
-            className="whitespace-nowrap transition-colors hover:text-gold"
+            className="shrink-0 whitespace-nowrap transition-colors hover:text-gold"
           >
             {link.label}
           </Link>

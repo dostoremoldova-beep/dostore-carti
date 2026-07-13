@@ -9,7 +9,7 @@
     "lint": "eslint",
     "postinstall": "node scripts/check-prisma-version.mjs && prisma generate",
     "prisma:push": "prisma db push",
-    "prisma:seed": "tsx prisma/seed.ts"
+    "prisma:seed": "prisma db seed"
   },
   "dependencies": {
     "@prisma/client": "6.19.3",
