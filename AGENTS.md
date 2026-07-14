@@ -125,6 +125,29 @@ Matcher-ul acoperă și `/api/admin/:path*` (ex. upload-ul de imagini) — pentr
 `/api/*` fără sesiune, `proxy.ts` răspunde cu 401 JSON, nu redirect (altfel un `fetch()` din
 client ar urma redirectul spre pagina HTML de login și ar primi un 200 confuz în loc de eroare).
 
+### Securitate — ce e verificat și de ce (nu slăbi aceste garanții)
+
+Bateria de teste live (Playwright + curl, împotriva unui MongoDB efemer) a confirmat, în plus
+față de protecția rutelor de mai sus:
+
+- **Callback-ul maib (`app/api/payments/maib/callback/route.ts`) validează OBLIGATORIU
+  semnătura înainte de a atinge comanda.** Dovedit empiric: un callback forjat cu `status: OK`
+  dar semnătură invalidă NU marchează comanda plătită; doar semnătura corectă (calculată cu
+  `MAIB_SIGNATURE_KEY`) o trece pe `PAID`/`CONFIRMED`. Ruta întoarce mereu `200 {ok:true}` către
+  maib (ca să nu reîncerce la nesfârșit) și pe semnătură validă, și pe invalidă — asta e
+  intenționat și NU creează un oracol (atacatorul primește 200 în ambele cazuri). Nu muta
+  verificarea semnăturii după `prisma.order.update`.
+- **Sesiunea NextAuth** e cookie `httpOnly` + `SameSite=Lax`, invizibilă din `document.cookie`.
+  Login-ul respinge parolă greșită, email inexistent și încercări de NoSQL injection
+  (`{"$ne":null}`) — providerul Credentials caută adminul cu `prisma.findUnique` pe string, nu
+  interpolează obiecte în query.
+- **Headere de securitate** setate global în `next.config.ts` (`async headers()`):
+  `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY` (anti-clickjacking — site-ul nu e
+  menit să fie iframe-uit, nici callback-ul maib), `Referrer-Policy`, `Permissions-Policy`,
+  `Strict-Transport-Security`. În plus `poweredByHeader: false` scoate `X-Powered-By: Next.js`.
+- **XSS**: query-ul de căutare și câmpurile din formulare sunt randate prin JSX (escapare
+  automată) — un payload `<img onerror>` în `?q=` nu se execută și nu ajunge element viu în DOM.
+
 ### Gotcha: fișierele `"use server"` pot exporta DOAR funcții async
 
 Orice `export` dintr-un fișier cu `"use server"` la începutul lui (ex.
