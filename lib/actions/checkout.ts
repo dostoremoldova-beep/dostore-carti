@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { createDirectPayment } from "@/lib/payments/maib";
 import { sendNewOrderEmails } from "@/lib/email/notifications";
@@ -106,6 +107,22 @@ export async function createOrderAndPay(
       },
     },
   });
+
+  // Scădem stocul cărților cumpărate (logica de inventar). Clamp la 0 ca să nu
+  // ajungă negativ, apoi revalidăm arborele public ca numărul afișat pe homepage,
+  // catalog și pagina cărții să reflecte imediat noul stoc.
+  await Promise.all(
+    items.map(async (item) => {
+      const book = await prisma.book.findUnique({
+        where: { id: item.id },
+        select: { stock: true },
+      });
+      if (!book) return;
+      const newStock = Math.max(0, book.stock - item.quantity);
+      await prisma.book.update({ where: { id: item.id }, data: { stock: newStock } });
+    })
+  );
+  revalidatePath("/", "layout");
 
   // Confirmare către client + notificare către admin. Trimiterea nu blochează și
   // nu poate strica fluxul de plată (sendEmail prinde erorile intern).
