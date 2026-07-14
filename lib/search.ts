@@ -63,12 +63,33 @@ async function fallbackSearch(query: string, limit: number): Promise<Book[]> {
 
   if (words.length === 0) return [];
 
-  return prisma.book.findMany({
+  // Căutăm cărțile care conțin ORICARE cuvânt (case-insensitive) în searchText,
+  // apoi le ordonăm după relevanță: potrivirile din titlu cântăresc mai mult.
+  const candidates = await prisma.book.findMany({
     where: {
-      OR: words.map((word) => ({ searchText: { contains: word } })),
+      OR: words.map((word) => ({
+        searchText: { contains: word, mode: "insensitive" },
+      })),
     },
-    take: limit,
+    take: limit * 3,
   });
+
+  return candidates
+    .map((book) => {
+      const haystack = book.searchText.toLowerCase();
+      const titleHaystack = book.title.toLowerCase();
+      const authorHaystack = book.author.toLowerCase();
+      let score = 0;
+      for (const word of words) {
+        if (titleHaystack.includes(word)) score += 4;
+        else if (authorHaystack.includes(word)) score += 3;
+        else if (haystack.includes(word)) score += 1;
+      }
+      return { book, score };
+    })
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((entry) => entry.book);
 }
 
 export async function searchBooks(query: string, limit = 24): Promise<SearchResult> {
@@ -77,7 +98,12 @@ export async function searchBooks(query: string, limit = 24): Promise<SearchResu
 
   try {
     const books = await atlasSearch(trimmed, limit);
-    return { books, usedFallback: false };
+    // Dacă Atlas Search rulează dar nu întoarce nimic (index încă în construcție,
+    // typo neacoperit sau mapare incompletă), mai încercăm căutarea simplă ca
+    // să nu rămână utilizatorul cu „niciun rezultat" degeaba.
+    if (books.length > 0) return { books, usedFallback: false };
+    const fallback = await fallbackSearch(trimmed, limit);
+    return { books: fallback, usedFallback: fallback.length > 0 };
   } catch (error) {
     console.error(
       "[search] Atlas Search a eșuat, trec pe căutarea simplă de rezervă:",
