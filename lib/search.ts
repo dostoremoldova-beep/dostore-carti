@@ -55,6 +55,44 @@ async function atlasSearch(query: string, limit: number): Promise<Book[]> {
     .filter((book): book is Book => Boolean(book));
 }
 
+// Distanța Damerau-Levenshtein (optimal string alignment) — pentru toleranță la
+// greșeli de tastare. Contează transpoziția a două litere vecine ca O SINGURĂ
+// editare (ex. „atmoic" vs „atomic", „sapeins" vs „sapiens"), cel mai frecvent
+// tip de typo. Catalogul e mic, deci o rulăm în memorie.
+function editDistance(a: string, b: string): number {
+  const m = a.length;
+  const n = b.length;
+  if (a === b) return 0;
+  if (!m) return n;
+  if (!n) return m;
+
+  const d: number[][] = Array.from({ length: m + 1 }, () => new Array<number>(n + 1).fill(0));
+  for (let i = 0; i <= m; i++) d[i][0] = i;
+  for (let j = 0; j <= n; j++) d[0][j] = j;
+
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost);
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+        d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1); // transpoziție vecini
+      }
+    }
+  }
+  return d[m][n];
+}
+
+// Cât de mult „aproape" acceptăm între cuvântul căutat și un token, în funcție
+// de lungime (cuvintele scurte tolerează 1 greșeală, cele lungi până la 2).
+function maxEditDistance(word: string): number {
+  if (word.length <= 3) return 0;
+  if (word.length <= 6) return 1;
+  return 2;
+}
+
+// Câmpurile relevante ca text de căutare per carte.
+const CANDIDATE_TAKE = 2000;
+
 async function fallbackSearch(query: string, limit: number): Promise<Book[]> {
   const words = query
     .toLowerCase()
@@ -63,9 +101,8 @@ async function fallbackSearch(query: string, limit: number): Promise<Book[]> {
 
   if (words.length === 0) return [];
 
-  // Căutăm cărțile care conțin ORICARE cuvânt (case-insensitive) în searchText,
-  // apoi le ordonăm după relevanță: potrivirile din titlu cântăresc mai mult.
-  const candidates = await prisma.book.findMany({
+  // 1) Potrivire directă (rapidă) — conține cuvântul în searchText.
+  const contained = await prisma.book.findMany({
     where: {
       OR: words.map((word) => ({
         searchText: { contains: word, mode: "insensitive" },
@@ -74,22 +111,53 @@ async function fallbackSearch(query: string, limit: number): Promise<Book[]> {
     take: limit * 3,
   });
 
-  return candidates
+  // 2) Dacă nu s-a găsit destul (probabil typo), scanăm un set mărginit de cărți
+  //    și potrivim fuzzy pe tokenii lor (titlu, autor, tag-uri etc.).
+  let pool = contained;
+  if (contained.length < limit) {
+    const extra = await prisma.book.findMany({ take: CANDIDATE_TAKE });
+    const seen = new Set(contained.map((b) => b.id));
+    pool = [...contained, ...extra.filter((b) => !seen.has(b.id))];
+  }
+
+  const scored = pool
     .map((book) => {
+      const title = book.title.toLowerCase();
+      const author = book.author.toLowerCase();
       const haystack = book.searchText.toLowerCase();
-      const titleHaystack = book.title.toLowerCase();
-      const authorHaystack = book.author.toLowerCase();
+      const tokens = haystack.split(/\s+/).filter(Boolean);
+
       let score = 0;
       for (const word of words) {
-        if (titleHaystack.includes(word)) score += 4;
-        else if (authorHaystack.includes(word)) score += 3;
-        else if (haystack.includes(word)) score += 1;
+        if (title.includes(word)) {
+          score += 5; // potrivire exactă în titlu
+        } else if (author.includes(word)) {
+          score += 4;
+        } else if (haystack.includes(word)) {
+          score += 2; // potrivire exactă oriunde
+        } else {
+          // fuzzy: cel mai apropiat token din carte
+          const threshold = maxEditDistance(word);
+          if (threshold > 0) {
+            let best = Infinity;
+            for (const token of tokens) {
+              if (Math.abs(token.length - word.length) > threshold) continue;
+              const d = editDistance(word, token);
+              if (d < best) best = d;
+              if (best === 0) break;
+            }
+            if (best <= threshold) score += 3 - best; // mai aproape = scor mai mare
+          }
+        }
       }
       return { book, score };
     })
+    .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
     .map((entry) => entry.book);
+
+  return scored;
 }
 
 export async function searchBooks(query: string, limit = 24): Promise<SearchResult> {
