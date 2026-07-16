@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
+import { sendNewBookAnnouncement } from "@/lib/email/notifications";
 
 export type BookFormState = {
   status: "idle" | "error";
@@ -107,8 +108,9 @@ export async function createBook(
     return { status: "error", message: "Verifică datele introduse.", fieldErrors: errors };
   }
 
+  let created;
   try {
-    await prisma.book.create({ data });
+    created = await prisma.book.create({ data });
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
       return {
@@ -118,6 +120,18 @@ export async function createBook(
       };
     }
     throw error;
+  }
+
+  // Anunțăm abonații la newsletter despre lansare (dacă e bifat, implicit da).
+  if (formData.get("notifySubscribers") === "on") {
+    await sendNewBookAnnouncement({
+      title: created.title,
+      author: created.author,
+      slug: created.slug,
+      coverImage: created.coverImage,
+      price: created.price,
+      discountPrice: created.discountPrice,
+    });
   }
 
   revalidatePath("/admin/carti");

@@ -258,6 +258,18 @@ export function BookForm({
           />
           Noutate
         </label>
+
+        {!initialBook && (
+          <label className="flex items-center gap-2 text-sm font-medium text-slate-700 sm:col-span-2">
+            <input
+              type="checkbox"
+              name="notifySubscribers"
+              defaultChecked
+              className="h-4 w-4 rounded border-slate-300 text-navy focus:ring-navy/20"
+            />
+            Anunță abonații la newsletter despre această carte nouă
+          </label>
+        )}
       </section>
 
       <button

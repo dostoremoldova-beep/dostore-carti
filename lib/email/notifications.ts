@@ -1,11 +1,13 @@
 import "server-only";
 import { sendEmail } from "./send";
 import { SITE_URL } from "@/lib/site";
+import { prisma } from "@/lib/prisma";
 import { OrderConfirmationEmail } from "./templates/OrderConfirmationEmail";
 import { AdminOrderNotificationEmail } from "./templates/AdminOrderNotificationEmail";
 import { PaymentConfirmedEmail } from "./templates/PaymentConfirmedEmail";
 import { NewsletterWelcomeEmail } from "./templates/NewsletterWelcomeEmail";
 import { OrderStatusUpdateEmail } from "./templates/OrderStatusUpdateEmail";
+import { NewBookAnnouncementEmail } from "./templates/NewBookAnnouncementEmail";
 import { STATUS_EMAIL } from "@/lib/orders/status";
 import type { OrderStatus } from "@prisma/client";
 import type { OrderEmailData } from "./types";
@@ -87,6 +89,38 @@ export async function sendOrderStatusEmail(input: {
       trackingNumber: input.trackingNumber,
     }),
   });
+}
+
+// Anunț către toți abonații newsletter când apare o carte nouă. Trimitem
+// individual (nu expunem adresele între abonați) și nu blocăm dacă eșuează.
+export async function sendNewBookAnnouncement(book: {
+  title: string;
+  author: string;
+  slug: string;
+  coverImage: string;
+  price: number;
+  discountPrice: number | null;
+}): Promise<void> {
+  const subscribers = await prisma.newsletterSubscriber.findMany({ select: { email: true } });
+  if (subscribers.length === 0) return;
+
+  const url = `${SITE_URL}/carti/${book.slug}`;
+  await Promise.allSettled(
+    subscribers.map((subscriber) =>
+      sendEmail({
+        to: subscriber.email,
+        subject: `Carte nouă la Dostore Carti: ${book.title}`,
+        react: NewBookAnnouncementEmail({
+          title: book.title,
+          author: book.author,
+          coverImage: book.coverImage,
+          price: book.price,
+          discountPrice: book.discountPrice,
+          url,
+        }),
+      })
+    )
+  );
 }
 
 export async function sendNewsletterWelcomeEmail(email: string): Promise<void> {

@@ -7,11 +7,7 @@ export const secondaryNavLinks: NavLink[] = [
   { label: "Categorii", href: "/categorii" },
   { label: "Noutăți", href: "/carti/noutati" },
   { label: "Bestsellers", href: "/carti/bestsellers" },
-  { label: "Top recomandări", href: "/carti/recomandate" },
-  { label: "Edituri", href: "/edituri" },
-  { label: "Colecții", href: "/colectii" },
   { label: "Reduceri", href: "/carti/reduceri" },
-  { label: "Librării", href: "/librarii" },
   { label: "Livrare și plată", href: "/livrare-si-plata" },
 ];
 

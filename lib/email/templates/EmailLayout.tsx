@@ -1,15 +1,19 @@
 import {
   Body,
+  Column,
   Container,
   Head,
   Heading,
   Html,
+  Img,
   Preview,
+  Row,
   Section,
   Text,
 } from "@react-email/components";
 import type { ReactNode } from "react";
 import { styles } from "./theme";
+import { SITE_URL } from "@/lib/site";
 
 export function EmailLayout({
   preview,
@@ -25,9 +29,22 @@ export function EmailLayout({
       <Body style={styles.body}>
         <Container style={styles.container}>
           <Section style={styles.header}>
-            <Heading as="h1" style={styles.brand}>
-              Dostore <span style={styles.brandAccent}>Carti</span>
-            </Heading>
+            <Row>
+              <Column style={{ width: "52px" }}>
+                <Img
+                  src={`${SITE_URL}/icon-192.png`}
+                  alt="Dostore Carti"
+                  width="44"
+                  height="44"
+                  style={{ borderRadius: "50%", display: "block" }}
+                />
+              </Column>
+              <Column>
+                <Heading as="h1" style={styles.brand}>
+                  Dostore <span style={styles.brandAccent}>Carti</span>
+                </Heading>
+              </Column>
+            </Row>
           </Section>
 
           <Section style={styles.content}>{children}</Section>
