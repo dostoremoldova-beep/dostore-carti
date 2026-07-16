@@ -5,7 +5,14 @@ import { OrderConfirmationEmail } from "./templates/OrderConfirmationEmail";
 import { AdminOrderNotificationEmail } from "./templates/AdminOrderNotificationEmail";
 import { PaymentConfirmedEmail } from "./templates/PaymentConfirmedEmail";
 import { NewsletterWelcomeEmail } from "./templates/NewsletterWelcomeEmail";
+import { OrderStatusUpdateEmail } from "./templates/OrderStatusUpdateEmail";
+import { STATUS_EMAIL } from "@/lib/orders/status";
+import type { OrderStatus } from "@prisma/client";
 import type { OrderEmailData } from "./types";
+
+function trackingUrl(orderNumber: string): string {
+  return `${SITE_URL}/comanda/${encodeURIComponent(orderNumber)}`;
+}
 
 const ADMIN_RECIPIENT = process.env.EMAIL_ADMIN ?? process.env.ADMIN_EMAIL;
 
@@ -21,7 +28,7 @@ export async function sendNewOrderEmails(
     sendEmail({
       to: order.customerEmail,
       subject: `Am primit comanda ta ${order.orderNumber}`,
-      react: OrderConfirmationEmail({ order }),
+      react: OrderConfirmationEmail({ order, trackingUrl: trackingUrl(order.orderNumber) }),
     }),
   ];
 
@@ -55,6 +62,29 @@ export async function sendPaymentConfirmedEmail(input: {
       customerName: input.customerName,
       orderNumber: input.orderNumber,
       total: input.total,
+      trackingUrl: trackingUrl(input.orderNumber),
+    }),
+  });
+}
+
+export async function sendOrderStatusEmail(input: {
+  customerName: string;
+  customerEmail: string;
+  orderNumber: string;
+  status: OrderStatus;
+  trackingNumber?: string | null;
+}): Promise<void> {
+  const copy = STATUS_EMAIL[input.status];
+  if (!copy) return; // status fără notificare (ex. PENDING, CANCELLED)
+  await sendEmail({
+    to: input.customerEmail,
+    subject: copy.subject(input.orderNumber),
+    react: OrderStatusUpdateEmail({
+      customerName: input.customerName,
+      orderNumber: input.orderNumber,
+      status: input.status,
+      trackingUrl: trackingUrl(input.orderNumber),
+      trackingNumber: input.trackingNumber,
     }),
   });
 }

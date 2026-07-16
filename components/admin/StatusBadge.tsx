@@ -1,6 +1,7 @@
 const ORDER_STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-amber-50 text-amber-700",
   CONFIRMED: "bg-blue-50 text-blue-700",
+  PROCESSING: "bg-sky-50 text-sky-700",
   SHIPPED: "bg-indigo-50 text-indigo-700",
   DELIVERED: "bg-green-50 text-green-700",
   CANCELLED: "bg-slate-100 text-slate-500",
@@ -9,6 +10,7 @@ const ORDER_STATUS_STYLES: Record<string, string> = {
 const ORDER_STATUS_LABELS: Record<string, string> = {
   PENDING: "În așteptare",
   CONFIRMED: "Confirmată",
+  PROCESSING: "În procesare",
   SHIPPED: "Expediată",
   DELIVERED: "Livrată",
   CANCELLED: "Anulată",

@@ -1,4 +1,4 @@
-import { Section, Text } from "@react-email/components";
+import { Button, Section, Text } from "@react-email/components";
 import { EmailLayout } from "./EmailLayout";
 import { styles } from "./theme";
 import { formatPrice } from "@/lib/format";
@@ -7,10 +7,12 @@ export function PaymentConfirmedEmail({
   customerName,
   orderNumber,
   total,
+  trackingUrl,
 }: {
   customerName: string;
   orderNumber: string;
   total: number;
+  trackingUrl?: string;
 }) {
   const firstName = customerName.split(" ")[0] || customerName;
 
@@ -30,6 +32,14 @@ export function PaymentConfirmedEmail({
         <Text style={{ ...styles.label, margin: "10px 0 4px" }}>Sumă plătită</Text>
         <Text style={styles.value}>{formatPrice(total)}</Text>
       </Section>
+
+      {trackingUrl && (
+        <Section style={{ textAlign: "center", margin: "8px 0 20px" }}>
+          <Button href={trackingUrl} style={styles.button}>
+            Urmărește comanda
+          </Button>
+        </Section>
+      )}
 
       <Text style={styles.paragraph}>
         Vei fi anunțat când comanda pleacă la livrare. Îți mulțumim că ai ales Dostore Carti!

@@ -1,10 +1,16 @@
-import { Column, Hr, Row, Section, Text } from "@react-email/components";
+import { Button, Column, Hr, Row, Section, Text } from "@react-email/components";
 import { EmailLayout } from "./EmailLayout";
 import { styles } from "./theme";
 import { formatPrice } from "@/lib/format";
 import type { OrderEmailData } from "@/lib/email/types";
 
-export function OrderConfirmationEmail({ order }: { order: OrderEmailData }) {
+export function OrderConfirmationEmail({
+  order,
+  trackingUrl,
+}: {
+  order: OrderEmailData;
+  trackingUrl?: string;
+}) {
   const firstName = order.customerName.split(" ")[0] || order.customerName;
 
   return (
@@ -72,6 +78,14 @@ export function OrderConfirmationEmail({ order }: { order: OrderEmailData }) {
           </Column>
         </Row>
       </Section>
+
+      {trackingUrl && (
+        <Section style={{ textAlign: "center", marginTop: "24px" }}>
+          <Button href={trackingUrl} style={styles.button}>
+            Urmărește comanda
+          </Button>
+        </Section>
+      )}
 
       <Text style={{ ...styles.paragraph, margin: "24px 0 0" }}>
         Ai întrebări despre comandă? Răspunde la acest email sau scrie-ne la

@@ -155,13 +155,38 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               </select>
             </div>
 
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Nr. urmărire curier (AWB)
+              </label>
+              <input
+                name="trackingNumber"
+                defaultValue={order.trackingNumber ?? ""}
+                placeholder="ex. AWB FANcourier"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm focus:border-navy focus:outline-none focus:ring-2 focus:ring-navy/20"
+              />
+            </div>
+
             <button
               type="submit"
               className="w-full rounded-lg bg-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-navy-dark"
             >
               Actualizează
             </button>
+            <p className="text-xs text-slate-500">
+              La schimbarea statusului, clientul primește automat un email cu noul stadiu
+              și linkul de urmărire.
+            </p>
           </form>
+
+          <a
+            href={`/comanda/${order.orderNumber}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-3 block text-center text-sm font-medium text-navy hover:underline"
+          >
+            Vezi pagina publică de tracking →
+          </a>
         </section>
       </div>
     </div>

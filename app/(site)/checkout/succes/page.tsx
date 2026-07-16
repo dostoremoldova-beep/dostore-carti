@@ -56,12 +56,22 @@ export default async function CheckoutSuccesPage({ searchParams }: PageProps) {
         </p>
       )}
 
-      <Link
-        href="/"
-        className="mt-8 inline-flex items-center gap-2 rounded-full bg-terracotta px-7 py-3 font-semibold text-cream transition-colors hover:bg-terracotta-dark"
-      >
-        Înapoi la Dostore Carti
-      </Link>
+      <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
+        {order && (
+          <Link
+            href={`/comanda/${order.orderNumber}`}
+            className="inline-flex items-center gap-2 rounded-full bg-terracotta px-7 py-3 font-semibold text-cream transition-colors hover:bg-terracotta-dark"
+          >
+            Urmărește comanda
+          </Link>
+        )}
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 rounded-full border border-border px-7 py-3 font-semibold text-ink transition-colors hover:border-terracotta hover:text-terracotta"
+        >
+          Înapoi la Dostore Carti
+        </Link>
+      </div>
     </div>
   );
 }

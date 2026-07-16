@@ -97,6 +97,9 @@ export async function createOrderAndPay(
       subtotal,
       shippingCost,
       total,
+      // Termen estimat: 3 zile lucrătoare (aproximat simplu cu zile calendaristice).
+      estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      statusHistory: [{ status: "PENDING", at: new Date() }],
       items: {
         create: items.map((item) => ({
           bookId: item.id,

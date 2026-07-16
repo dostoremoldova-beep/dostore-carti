@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
   const payId = typeof result.payId === "string" ? result.payId : order.paymentId;
 
   const wasAlreadyPaid = order.paymentStatus === "PAID";
+  const confirmNow = paid && !wasAlreadyPaid;
 
   await prisma.order.update({
     where: { id: order.id },
@@ -51,6 +52,10 @@ export async function POST(request: NextRequest) {
       paymentStatus: paid ? "PAID" : "FAILED",
       status: paid ? "CONFIRMED" : order.status,
       paymentId: payId,
+      // Marcăm în timeline momentul confirmării plății (o singură dată).
+      ...(confirmNow
+        ? { statusHistory: { push: { status: "CONFIRMED" as const, at: new Date() } } }
+        : {}),
     },
   });
 
