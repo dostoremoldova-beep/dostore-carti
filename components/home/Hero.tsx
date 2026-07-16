@@ -3,29 +3,40 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="relative flex min-h-[32rem] items-center overflow-hidden">
+    <section className="relative isolate flex min-h-[32rem] items-start overflow-hidden sm:min-h-[34rem] md:items-center">
+      {/* Imagine desktop (spațiu liber în stânga) */}
       <Image
-        src="https://images.unsplash.com/photo-1700906010457-c7a565935b81?auto=format&fit=crop&w=1920&h=1080&q=80"
-        alt="Interiorul unei librării, cu rafturi pline de cărți"
+        src="/hero-desktop.webp"
+        alt="Cărți și flori uscate pe o masă de lemn"
         fill
         priority
         sizes="100vw"
-        className="object-cover"
+        className="hidden object-cover md:block"
       />
-      <div className="absolute inset-0 bg-gradient-to-r from-navy/85 via-navy/60 to-navy/20" />
+      {/* Imagine mobil (spațiu liber sus) */}
+      <Image
+        src="/hero-mobile.webp"
+        alt="Cărți și flori uscate pe o masă de lemn"
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover object-bottom md:hidden"
+      />
 
-      <div className="relative mx-auto max-w-7xl px-4 py-24 sm:px-6 lg:px-8">
-        <div className="max-w-xl">
-          <p className="font-medium uppercase tracking-widest text-gold">
-            Librăria ta online din Moldova
+      {/* Voal crem pentru lizibilitatea textului (sus pe mobil, stânga pe desktop) */}
+      <div className="absolute inset-0 bg-gradient-to-b from-cream/85 via-cream/30 to-transparent md:bg-gradient-to-r md:from-cream/90 md:via-cream/45 md:to-transparent" />
+
+      <div className="relative mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 md:py-24 lg:px-8">
+        <div className="max-w-md md:max-w-xl">
+          <p className="font-medium uppercase tracking-widest text-terracotta">
+            Dostore Carti — Moldova
           </p>
-          <h1 className="mt-4 font-serif text-4xl font-semibold leading-tight text-cream sm:text-5xl">
-            Cărți alese cu grijă, livrate direct la tine
+          <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight text-ink sm:text-5xl">
+            Cărți și uleiuri esențiale, alese cu grijă
           </h1>
-          <p className="mt-5 text-lg text-cream/80">
-            De la literatură română și universală, până la dezvoltare personală
-            și cărți pentru cei mici — găsești tot ce ai nevoie, cu livrare
-            rapidă oriunde în Moldova.
+          <p className="mt-5 max-w-lg text-lg text-ink-soft">
+            De la cărți pentru suflet și dezvoltare, până la ghiduri de uleiuri esențiale și
+            materiale pentru afacerea ta — livrate rapid oriunde în Moldova.
           </p>
           <div className="mt-8">
             <Link
