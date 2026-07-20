@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 const sections = [
   {
     title: "1. Ce date colectăm",
-    body: "Colectăm datele pe care ni le oferi la crearea unei comenzi: nume, telefon, email și adresă de livrare. Nu stocăm datele cardului bancar — acestea sunt procesate direct de maib.",
+    body: "Colectăm datele pe care ni le oferi la crearea unei comenzi: nume, telefon, email și adresă de livrare. Nu stocăm datele cardului bancar — acestea sunt procesate direct de banca parteneră.",
   },
   {
     title: "2. Cum folosim datele",

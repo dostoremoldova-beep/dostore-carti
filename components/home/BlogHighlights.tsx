@@ -30,29 +30,31 @@ export async function BlogHighlights() {
 
       <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
         {posts.map((post) => (
+          // Imaginile sunt compuse cu subiectul în dreapta și spațiu liber în
+          // stânga, deci textul stă PESTE imagine, în zona goală — nu alături.
           <Link
             key={post.id}
             href={`/blog/${post.slug}`}
-            className="group flex items-stretch overflow-hidden rounded-xl bg-cream-soft ring-1 ring-border/60 transition-shadow hover:shadow-md"
+            className="group relative flex aspect-[16/9] items-center overflow-hidden rounded-xl ring-1 ring-border/60 transition-shadow hover:shadow-lg"
           >
-            <div className="flex flex-1 flex-col justify-center gap-2 p-5">
+            <Image
+              src={post.coverImage}
+              alt=""
+              fill
+              sizes="(max-width: 768px) 100vw, 33vw"
+              className="object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            {/* Voal dinspre stânga, ca textul să rămână lizibil peste imagine */}
+            <div className="absolute inset-0 bg-gradient-to-r from-cream via-cream/75 to-transparent" />
+
+            <div className="relative flex max-w-[62%] flex-col gap-1.5 p-5">
               <h3 className="font-serif text-lg font-semibold leading-snug text-ink">
                 {post.title}
               </h3>
-              <p className="line-clamp-2 text-sm leading-relaxed text-ink-soft">{post.excerpt}</p>
-              <span className="mt-2 inline-flex w-fit rounded-full border border-ink/25 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink transition-colors group-hover:border-terracotta group-hover:text-terracotta">
+              <p className="line-clamp-2 text-xs leading-relaxed text-ink-soft">{post.excerpt}</p>
+              <span className="mt-2 inline-flex w-fit rounded-full border border-ink/30 bg-cream/70 px-4 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-ink transition-colors group-hover:border-terracotta group-hover:text-terracotta">
                 Citește
               </span>
-            </div>
-
-            <div className="relative w-28 shrink-0 sm:w-32">
-              <Image
-                src={post.coverImage}
-                alt=""
-                fill
-                sizes="128px"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
-              />
             </div>
           </Link>
         ))}

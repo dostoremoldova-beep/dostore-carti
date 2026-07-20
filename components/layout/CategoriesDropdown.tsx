@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { CategoryIcon } from "@/components/CategoryIcon";
 
 type Cat = { id: string; name: string; slug: string };
@@ -63,8 +63,11 @@ export function CategoriesDropdown({ categories }: { categories: Cat[] }) {
         onClick={() => (open ? setOpen(false) : show())}
         aria-expanded={open}
         aria-haspopup="true"
-        className="flex items-center gap-1 whitespace-nowrap transition-colors hover:text-gold"
+        // Butonul de categorii e „intrarea principală" în catalog, deci arată
+        // ca un buton plin, nu ca un link ca celelalte din bară.
+        className="flex items-center gap-2 whitespace-nowrap rounded-lg bg-terracotta px-4 py-2 font-semibold uppercase tracking-wide text-cream transition-colors hover:bg-terracotta-dark"
       >
+        <Menu className="h-4 w-4" aria-hidden="true" />
         Categorii
         <ChevronDown
           className={`h-3.5 w-3.5 transition-transform ${open ? "rotate-180" : ""}`}

@@ -77,7 +77,7 @@ export function Footer() {
             <ul className="mt-4 space-y-2.5 text-sm text-cream/70">
               <li className="flex items-center gap-2">
                 <CreditCard className="h-4.5 w-4.5 text-gold" aria-hidden="true" />
-                Card bancar, prin maib
+                Ramburs la livrare
               </li>
               <li className="flex items-center gap-2">
                 <Banknote className="h-4.5 w-4.5 text-gold" aria-hidden="true" />

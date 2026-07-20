@@ -100,7 +100,7 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
             <h2 className="mb-3 font-semibold text-slate-900">Istoric plată</h2>
             <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between gap-4">
-                <dt className="text-slate-500">ID plată (maib)</dt>
+                <dt className="text-slate-500">ID plată</dt>
                 <dd className="text-right text-slate-900">{order.paymentId ?? "—"}</dd>
               </div>
               <div className="flex justify-between gap-4">

@@ -1,10 +1,8 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { createDirectPayment } from "@/lib/payments/maib";
 import { sendNewOrderEmails } from "@/lib/email/notifications";
 import { tgNewOrder } from "@/lib/telegram";
 import { cartItemPrice, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/store/cart";
@@ -54,21 +52,6 @@ function validate(formData: FormData): { values: Record<string, string>; errors:
   if (city.length < 2) errors.city = "Alege localitatea din listă.";
 
   return { values: { customerName, email, phone, shippingAddress, city, county }, errors };
-}
-
-async function resolveOrigin(): Promise<string> {
-  const headersList = await headers();
-  const host = headersList.get("host") ?? "localhost:3000";
-  const protocol =
-    headersList.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${protocol}://${host}`;
-}
-
-async function resolveClientIp(): Promise<string> {
-  const headersList = await headers();
-  const forwardedFor = headersList.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-  return headersList.get("x-real-ip") ?? "127.0.0.1";
 }
 
 /**
@@ -211,42 +194,9 @@ export async function createOrderAndPay(
     }),
   ]);
 
-  const [origin, clientIp] = await Promise.all([resolveOrigin(), resolveClientIp()]);
-
-  let payment;
-  try {
-    payment = await createDirectPayment({
-      amount: total,
-      currency: "MDL",
-      clientIp,
-      description: `Comandă Dostore Carti ${orderNumber}`,
-      orderId: orderNumber,
-      clientName: customerName,
-      email,
-      phone,
-      delivery: shippingCost,
-      items: items.map((item) => ({
-        id: item.id,
-        name: item.title,
-        price: cartItemPrice(item),
-        quantity: item.quantity,
-      })),
-      callbackUrl: `${origin}/api/payments/maib/callback`,
-      okUrl: `${origin}/checkout/succes?order=${orderNumber}`,
-      failUrl: `${origin}/checkout/esuat?order=${orderNumber}`,
-    });
-  } catch (error) {
-    console.error("[checkout] inițierea plății maib a eșuat:", error);
-    return {
-      status: "error",
-      message: `Comanda ta (nr. ${orderNumber}) a fost înregistrată, dar nu am putut porni plata online. Te rugăm să ne contactezi sau încearcă din nou.`,
-    };
-  }
-
-  await prisma.order.update({
-    where: { id: order.id },
-    data: { paymentId: payment.payId },
-  });
-
-  redirect(payment.payUrl);
+  // Plata online e în curs de migrare de la maib la VictoriaBank. Până atunci
+  // comanda se finalizează direct: clientul plătește ramburs la livrare, iar
+  // pagina de succes îi confirmă comanda. Când vine integrarea VictoriaBank,
+  // aici se va genera linkul/QR-ul de plată și se va face redirect spre bancă.
+  redirect(`/checkout/succes?order=${orderNumber}`);
 }

@@ -4,9 +4,7 @@ import { BookCard } from "./BookCard";
 
 const VARIANT_CLASSES = {
   wide: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
-  // 6 pe rând pe desktop (cerut explicit pentru bestsellers) — cardurile se
-  // strâng automat odată cu grid-ul, fără să schimbe BookCard.
-  compact: "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6",
+  compact: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-4",
 };
 
 export function BookGrid({

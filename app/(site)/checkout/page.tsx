@@ -3,7 +3,7 @@ import { CheckoutView } from "@/components/checkout/CheckoutView";
 
 export const metadata: Metadata = {
   title: "Finalizează comanda",
-  description: "Completează datele de livrare și plătește în siguranță prin maib.",
+  description: "Completează datele de livrare și finalizează comanda în câțiva pași.",
   robots: { index: false, follow: false },
 };
 

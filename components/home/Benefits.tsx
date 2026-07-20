@@ -9,7 +9,7 @@ const BENEFITS = [
   {
     icon: ShieldCheck,
     title: "Plată sigură",
-    description: "Card bancar prin maib sau ramburs la livrare",
+    description: "Ramburs la livrare, simplu și sigur",
   },
   {
     icon: Undo2,

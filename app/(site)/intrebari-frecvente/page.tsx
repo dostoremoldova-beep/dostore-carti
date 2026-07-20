@@ -14,7 +14,7 @@ const faqs = [
   {
     question: "Ce metode de plată acceptați?",
     answer:
-      "Poți plăti online cu cardul bancar, prin maib, sau ramburs la livrare, direct la curier.",
+      "Momentan plata se face ramburs la livrare, direct la curier. Plata online cu cardul va fi disponibilă în curând.",
   },
   {
     question: "Pot returna o carte dacă nu îmi place?",

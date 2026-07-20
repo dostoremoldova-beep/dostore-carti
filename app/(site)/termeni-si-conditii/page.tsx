@@ -24,7 +24,7 @@ const sections = [
   },
   {
     title: "5. Plata",
-    body: "Acceptăm plata online cu cardul, prin maib, și plata ramburs la livrare. Toate tranzacțiile online sunt procesate criptat, prin conexiuni securizate.",
+    body: "Acceptăm plata ramburs la livrare. Plata online cu cardul va fi disponibilă în curând; toate tranzacțiile online vor fi procesate criptat, prin conexiuni securizate.",
   },
   {
     title: "6. Dreptul de retur",

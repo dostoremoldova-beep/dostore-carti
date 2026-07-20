@@ -50,6 +50,9 @@ model Category {
   name  String @unique
   slug  String @unique
   icon  String?
+  // Imagine proprie, încărcată din admin. Când există, înlocuiește iconița
+  // în listele de categorii de pe site.
+  image String?
   books Book[]
 }
 

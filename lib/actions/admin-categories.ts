@@ -16,13 +16,14 @@ function buildCategoryData(formData: FormData) {
   const name = String(formData.get("name") ?? "").trim();
   const slugInput = String(formData.get("slug") ?? "").trim();
   const icon = String(formData.get("icon") ?? "").trim() || undefined;
+  const image = String(formData.get("image") ?? "").trim() || null;
   const slug = slugify(slugInput || name);
 
   const errors: Record<string, string> = {};
   if (name.length < 2) errors.name = "Introdu numele categoriei.";
   if (!slug) errors.slug = "Slug invalid.";
 
-  return { errors, data: { name, slug, icon } };
+  return { errors, data: { name, slug, icon, image } };
 }
 
 export async function createCategory(

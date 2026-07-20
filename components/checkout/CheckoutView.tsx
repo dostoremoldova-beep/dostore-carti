@@ -131,11 +131,11 @@ export function CheckoutView() {
             disabled={pending}
             className="flex w-full items-center justify-center rounded-full bg-terracotta px-7 py-3.5 font-semibold text-cream transition-colors hover:bg-terracotta-dark disabled:opacity-60"
           >
-            {pending ? "Se procesează..." : `Plătește ${formatPrice(total)}`}
+            {pending ? "Se procesează..." : `Trimite comanda · ${formatPrice(total)}`}
           </button>
 
           <p className="text-center text-xs text-ink-soft">
-            Vei fi redirecționat către pagina securizată de plată maib.
+            Plata se face ramburs, la livrare. Îți trimitem confirmarea pe email.
           </p>
         </form>
 

@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import type { Category } from "@prisma/client";
 import { slugify } from "@/lib/slugify";
 import type { CategoryFormState } from "@/lib/actions/admin-categories";
+import { ImageUploader } from "./ImageUploader";
 
 type CategoryFormAction = (
   prevState: CategoryFormState,
@@ -26,6 +27,7 @@ export function CategoryForm({
   const [name, setName] = useState(initialCategory?.name ?? "");
   const [slug, setSlug] = useState(initialCategory?.slug ?? "");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [image, setImage] = useState(initialCategory?.image ?? "");
 
   return (
     <form action={formAction} className="max-w-md space-y-4 rounded-xl border border-slate-200 bg-white p-5">
@@ -64,10 +66,20 @@ export function CategoryForm({
         />
       </div>
 
-      <p className="rounded-lg bg-slate-50 px-3 py-2 text-xs text-slate-500">
-        Iconița categoriei e aleasă automat, în funcție de nume — nu trebuie să o
-        setezi manual.
-      </p>
+      <div>
+        <label className="mb-1.5 block text-sm font-medium text-slate-700">
+          Imagine categorie
+        </label>
+        <input type="hidden" name="image" value={image} />
+        <ImageUploader
+          label="Imagine categorie"
+          value={image ? [image] : []}
+          onChange={(urls) => setImage(urls[0] ?? "")}
+        />
+        <p className="mt-1.5 text-xs text-slate-500">
+          Opțional. Dacă lipsește, se folosește iconița aleasă automat după nume.
+        </p>
+      </div>
 
       <button
         type="submit"
