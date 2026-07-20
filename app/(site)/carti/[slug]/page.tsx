@@ -123,7 +123,11 @@ export default async function BookPage({ params }: PageProps) {
 
       {similarBooks.length > 0 && (
         <section className="mt-16">
-          <h2 className="mb-5 font-serif text-2xl font-semibold text-ink">Cărți similare</h2>
+          {/* Catalogul are și uleiuri, materiale promoționale, training — „Cărți
+              similare" era greșit pe 15 din 18 produse. Folosim numele categoriei. */}
+          <h2 className="mb-5 font-serif text-2xl font-semibold text-ink">
+            Din aceeași categorie: {book.category.name}
+          </h2>
           <BookGrid books={similarBooks} variant="compact" />
         </section>
       )}

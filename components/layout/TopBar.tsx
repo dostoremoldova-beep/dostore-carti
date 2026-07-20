@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Truck, Phone, Clock } from "lucide-react";
 
 export function TopBar() {
@@ -19,12 +18,8 @@ export function TopBar() {
             <Clock className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Luni–Vineri, 09:00–18:00</span>
           </span>
-          <Link href="/contact" className="hover:text-gold">
-            Contact
-          </Link>
-          <Link href="/despre-noi" className="hover:text-gold">
-            Despre noi
-          </Link>
+          {/* Contact / Despre noi au trecut în SecondaryNav, aliniate la dreapta,
+              ca să nu duplicăm linkuri pe două bare navy suprapuse. */}
         </div>
       </div>
     </div>

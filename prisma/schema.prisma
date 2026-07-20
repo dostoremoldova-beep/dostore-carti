@@ -23,6 +23,10 @@ model Book {
   isbn           String?
   language       String   @default("Română")
   pageCount      Int?
+  // Greutatea la ambalare, în grame. FAN Courier tarifează pe kg, deci fără ea
+  // nu putem calcula corect costul livrării. Opțional: produsele fără greutate
+  // intră în calcul cu estimarea implicită din lib/shipping/weight.ts.
+  weightGrams    Int?
   stock          Int      @default(0)
   rating         Float    @default(0)
   reviewCount    Int      @default(0)
@@ -69,6 +73,9 @@ model Order {
   customerPhone     String
   shippingAddress   String
   city              String
+  // Raionul (province la FAN). Obligatoriu pentru AWB — se completează automat
+  // din localitatea aleasă în checkout, fiindcă lista FAN dă perechea oraș+raion.
+  county            String?
   items             OrderItem[]
   subtotal          Float
   shippingCost      Float
@@ -79,6 +86,10 @@ model Order {
   // Tracking livrare
   trackingNumber    String?            // AWB de la curier (FANcourier)
   estimatedDelivery DateTime?          // termen estimat de livrare
+  // Cât ne costă PE NOI expedierea, după tariful din contractul FAN. Nu e ce
+  // plătește clientul (acela vine din regula proprie) — se salvează ca să se
+  // vadă marja reală pe fiecare comandă în admin.
+  fanCost           Float?
   statusHistory     OrderStatusEvent[] // istoricul stadiilor, cu timestamp
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt

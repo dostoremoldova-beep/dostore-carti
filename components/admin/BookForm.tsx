@@ -229,6 +229,19 @@ export function BookForm({
             className={inputClass}
           />
         </Field>
+        <Field label="Greutate (grame)">
+          <input
+            type="number"
+            name="weightGrams"
+            min={0}
+            defaultValue={initialBook?.weightGrams ?? ""}
+            placeholder="ex: 400"
+            className={inputClass}
+          />
+          <p className="mt-1 text-xs text-slate-500">
+            Folosită la calculul livrării FAN Courier. Dacă o lași goală, se estimează 400 g.
+          </p>
+        </Field>
         <div className="sm:col-span-2">
           <Field label="Etichete (separate prin virgulă)">
             <input

@@ -34,6 +34,7 @@ async function buildBookData(formData: FormData) {
   const rating = parseNumber(formData.get("rating")) ?? 0;
   const reviewCount = parseNumber(formData.get("reviewCount")) ?? 0;
   const pageCount = parseNumber(formData.get("pageCount"));
+  const weightGrams = parseNumber(formData.get("weightGrams"));
 
   const publisher = String(formData.get("publisher") ?? "").trim() || undefined;
   const isbn = String(formData.get("isbn") ?? "").trim() || undefined;
@@ -89,6 +90,7 @@ async function buildBookData(formData: FormData) {
       rating,
       reviewCount,
       pageCount,
+      weightGrams,
       publisher,
       isbn,
       language,

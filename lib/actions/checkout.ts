@@ -8,6 +8,8 @@ import { createDirectPayment } from "@/lib/payments/maib";
 import { sendNewOrderEmails } from "@/lib/email/notifications";
 import { tgNewOrder } from "@/lib/telegram";
 import { cartItemPrice, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/store/cart";
+import { getShippingPrice } from "@/lib/shipping/fan";
+import { calculateParcelWeightKg } from "@/lib/shipping/weight";
 import type { CartItem } from "@/lib/store/cart";
 
 export type CheckoutFieldErrors = Partial<
@@ -39,15 +41,19 @@ function validate(formData: FormData): { values: Record<string, string>; errors:
   const phone = String(formData.get("phone") ?? "").trim();
   const shippingAddress = String(formData.get("shippingAddress") ?? "").trim();
   const city = String(formData.get("city") ?? "").trim();
+  // Raionul vine din autocomplete-ul de localități (lista FAN), nu de la client.
+  // Poate lipsi dacă a scris orașul de mână — nu blocăm comanda pentru asta,
+  // dar AWB-ul va cere completarea lui din admin.
+  const county = String(formData.get("county") ?? "").trim();
 
   const errors: CheckoutFieldErrors = {};
   if (customerName.length < 3) errors.customerName = "Introdu numele complet.";
   if (!EMAIL_REGEX.test(email)) errors.email = "Introdu o adresă de email validă.";
   if (!PHONE_REGEX.test(phone)) errors.phone = "Introdu un număr de telefon valid.";
   if (shippingAddress.length < 5) errors.shippingAddress = "Introdu adresa completă de livrare.";
-  if (city.length < 2) errors.city = "Introdu orașul.";
+  if (city.length < 2) errors.city = "Alege localitatea din listă.";
 
-  return { values: { customerName, email, phone, shippingAddress, city }, errors };
+  return { values: { customerName, email, phone, shippingAddress, city, county }, errors };
 }
 
 async function resolveOrigin(): Promise<string> {
@@ -65,6 +71,39 @@ async function resolveClientIp(): Promise<string> {
   return headersList.get("x-real-ip") ?? "127.0.0.1";
 }
 
+/**
+ * Costul FAN estimat pentru coșul curent. Greutățile vin din DB (nu din coșul
+ * client-side). Orice eșec întoarce null — nu stricăm comanda pentru o cifră
+ * informativă.
+ */
+async function estimateFanCost(
+  items: CartItem[],
+  city: string,
+  county: string,
+  codAmount: number
+): Promise<number | null> {
+  try {
+    const books = await prisma.book.findMany({
+      where: { id: { in: items.map((item) => item.id) } },
+      select: { id: true, weightGrams: true },
+    });
+    const weightById = new Map(books.map((book) => [book.id, book.weightGrams]));
+
+    const weightKg = calculateParcelWeightKg(
+      items.map((item) => ({
+        quantity: item.quantity,
+        weightGrams: weightById.get(item.id) ?? null,
+      }))
+    );
+
+    const price = await getShippingPrice({ toCity: city, toCounty: county, weightKg, codAmount });
+    return price?.price ?? null;
+  } catch (error) {
+    console.error("[checkout] estimarea costului FAN a eșuat:", error);
+    return null;
+  }
+}
+
 export async function createOrderAndPay(
   items: CartItem[],
   _prevState: CheckoutState,
@@ -80,12 +119,20 @@ export async function createOrderAndPay(
     return { status: "error", message: "Verifică datele introduse.", fieldErrors: errors, values };
   }
 
-  const { customerName, email, phone, shippingAddress, city } = values;
+  const { customerName, email, phone, shippingAddress, city, county } = values;
 
   const subtotal = items.reduce((sum, item) => sum + cartItemPrice(item) * item.quantity, 0);
+  // Ce plătește clientul: regula noastră (gratuit peste prag). Costul real către
+  // FAN se calculează separat mai jos și se salvează doar informativ.
   const shippingCost = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_COST;
   const total = subtotal + shippingCost;
   const orderNumber = generateOrderNumber();
+
+  // Cât ne costă pe noi expedierea, după tariful FAN. Greutățile le citim din
+  // DB, nu din coșul din localStorage — clientul nu trebuie să poată influența
+  // un input de tarifare. Nu blochează comanda: `getShippingPrice` întoarce
+  // null dacă FAN nu răspunde sau nu e configurat.
+  const fanCost = county ? await estimateFanCost(items, city, county, total) : null;
 
   const order = await prisma.order.create({
     data: {
@@ -95,6 +142,8 @@ export async function createOrderAndPay(
       customerPhone: phone,
       shippingAddress,
       city,
+      county: county || null,
+      fanCost,
       subtotal,
       shippingCost,
       total,

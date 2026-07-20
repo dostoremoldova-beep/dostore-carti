@@ -12,6 +12,12 @@ export const secondaryNavLinks: NavLink[] = [
   { label: "Livrare și plată", href: "/livrare-si-plata" },
 ];
 
+// Aliniate la dreapta în bara de navigație (restul stau la stânga).
+export const secondaryNavRightLinks: NavLink[] = [
+  { label: "Contact", href: "/contact" },
+  { label: "Despre noi", href: "/despre-noi" },
+];
+
 export const footerInfoLinks: NavLink[] = [
   { label: "Despre noi", href: "/despre-noi" },
   { label: "Cariere", href: "/cariere" },

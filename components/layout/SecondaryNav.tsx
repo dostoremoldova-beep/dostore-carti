@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { secondaryNavLinks } from "@/lib/nav-links";
+import { secondaryNavLinks, secondaryNavRightLinks } from "@/lib/nav-links";
 import { getAllCategories } from "@/lib/categories";
 import { CategoriesDropdown } from "./CategoriesDropdown";
 
@@ -22,6 +22,20 @@ export async function SecondaryNav() {
             </Link>
           )
         )}
+
+        {/* Linkurile „instituționale" stau împinse la dreapta, separate vizual
+            de navigația de catalog din stânga. */}
+        <div className="ml-auto flex shrink-0 items-center gap-6">
+          {secondaryNavRightLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="whitespace-nowrap transition-colors hover:text-gold"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
       </div>
     </nav>
   );

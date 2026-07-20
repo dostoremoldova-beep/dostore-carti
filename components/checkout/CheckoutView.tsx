@@ -7,11 +7,14 @@ import { ShoppingBag } from "lucide-react";
 import { useCartStore, cartItemPrice, getShippingCost } from "@/lib/store/cart";
 import { createOrderAndPay, type CheckoutState } from "@/lib/actions/checkout";
 import { formatPrice } from "@/lib/format";
+import { CityAutocomplete } from "./CityAutocomplete";
 
 const initialState: CheckoutState = { status: "idle" };
 
+// „city" nu e aici: are câmp propriu cu autocomplete din localitățile FAN
+// (vezi CityAutocomplete), fiindcă trebuie să deducă și raionul.
 const FIELDS: {
-  name: "customerName" | "email" | "phone" | "shippingAddress" | "city";
+  name: "customerName" | "email" | "phone" | "shippingAddress";
   label: string;
   type: string;
   autoComplete: string;
@@ -21,7 +24,6 @@ const FIELDS: {
   { name: "email", label: "Email", type: "email", autoComplete: "email" },
   { name: "phone", label: "Telefon", type: "tel", autoComplete: "tel" },
   { name: "shippingAddress", label: "Adresă de livrare", type: "text", autoComplete: "street-address", colSpan: true },
-  { name: "city", label: "Oraș", type: "text", autoComplete: "address-level2" },
 ];
 
 export function CheckoutView() {
@@ -102,6 +104,26 @@ export function CheckoutView() {
                 )}
               </div>
             ))}
+
+            <div>
+              <label htmlFor="city" className="mb-1.5 block text-sm font-medium text-ink">
+                Oraș / localitate
+              </label>
+              <CityAutocomplete
+                defaultCity={state.values?.city ?? ""}
+                defaultCounty={state.values?.county ?? ""}
+                inputClassName={`w-full rounded-lg border bg-card px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-terracotta/30 ${
+                  state.fieldErrors?.city
+                    ? "border-terracotta"
+                    : "border-border focus:border-terracotta"
+                }`}
+              />
+              {state.fieldErrors?.city && (
+                <p className="mt-1.5 text-xs font-medium text-terracotta">
+                  {state.fieldErrors.city}
+                </p>
+              )}
+            </div>
           </div>
 
           <button

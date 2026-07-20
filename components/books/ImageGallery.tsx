@@ -9,7 +9,9 @@ export function ImageGallery({ images, title }: { images: string[]; title: strin
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-cream-soft">
+      {/* Pătrat: imaginile de produs sunt normalizate 1:1 (vezi
+          scripts/squarify-product-images.mts), deci `cover` nu taie nimic. */}
+      <div className="relative aspect-square w-full overflow-hidden rounded-xl bg-cream-soft">
         <Image
           src={activeImage}
           alt={`Coperta cărții ${title}`}
@@ -29,7 +31,7 @@ export function ImageGallery({ images, title }: { images: string[]; title: strin
               onClick={() => setActiveIndex(index)}
               aria-label={`Arată imaginea ${index + 1}`}
               aria-current={index === activeIndex}
-              className={`relative h-20 w-14 shrink-0 overflow-hidden rounded-lg ring-2 transition-colors ${
+              className={`relative h-16 w-16 shrink-0 overflow-hidden rounded-lg ring-2 transition-colors ${
                 index === activeIndex ? "ring-terracotta" : "ring-transparent hover:ring-border"
               }`}
             >
