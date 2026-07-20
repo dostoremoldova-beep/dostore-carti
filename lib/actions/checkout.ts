@@ -8,7 +8,18 @@ import { tgNewOrder } from "@/lib/telegram";
 import { cartItemPrice, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/store/cart";
 import { getShippingPrice } from "@/lib/shipping/fan";
 import { calculateParcelWeightKg } from "@/lib/shipping/weight";
+import { createPayment } from "@/lib/payments/victoriabank";
+import { headers } from "next/headers";
 import type { CartItem } from "@/lib/store/cart";
+
+// Originul cererii (schema + host), pentru URL-urile de callback/return trimise băncii.
+async function resolveOrigin(): Promise<string> {
+  const headersList = await headers();
+  const host = headersList.get("host") ?? "localhost:3000";
+  const protocol =
+    headersList.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${protocol}://${host}`;
+}
 
 export type CheckoutFieldErrors = Partial<
   Record<"customerName" | "email" | "phone" | "shippingAddress" | "city", string>
@@ -194,9 +205,32 @@ export async function createOrderAndPay(
     }),
   ]);
 
-  // Plata online e în curs de migrare de la maib la VictoriaBank. Până atunci
-  // comanda se finalizează direct: clientul plătește ramburs la livrare, iar
-  // pagina de succes îi confirmă comanda. Când vine integrarea VictoriaBank,
-  // aici se va genera linkul/QR-ul de plată și se va face redirect spre bancă.
+  // Plată online prin VictoriaBank (MIA). Fără credențiale, `createPayment`
+  // întoarce `skipped` și comanda merge pe ramburs (pagina de succes). Cu
+  // credențiale, generăm sesiunea de plată și redirectăm clientul spre bancă.
+  const origin = await resolveOrigin();
+  let payment: Awaited<ReturnType<typeof createPayment>> | null = null;
+  try {
+    payment = await createPayment({
+      orderNumber,
+      amount: total,
+      description: `Comandă Dostore Carti ${orderNumber}`,
+      callbackUrl: `${origin}/api/payments/victoriabank/callback`,
+      returnUrl: `${origin}/checkout/succes?order=${orderNumber}`,
+    });
+  } catch (error) {
+    // Plata a picat la inițiere: comanda e deja salvată, deci nu o pierdem —
+    // o lăsăm pe ramburs în loc să blocăm clientul.
+    console.error("[checkout] inițierea plății VictoriaBank a eșuat:", error);
+  }
+
+  if (payment && !payment.skipped && payment.paymentId) {
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { paymentId: payment.paymentId },
+    });
+    redirect(payment.payUrl);
+  }
+
   redirect(`/checkout/succes?order=${orderNumber}`);
 }
