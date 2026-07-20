@@ -11,12 +11,13 @@ export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
       className="flex shrink-0 items-center gap-2.5"
       aria-label="Dostore Carti — pagina principală"
     >
+      {/* Fără `priority`: logo-ul e mic (6KB) și nu trebuie să fure slotul de
+          preload al imaginii LCP (hero-ul). */}
       <Image
         src="/logo-nou.png"
         alt=""
         width={56}
         height={56}
-        priority
         className="h-14 w-14 shrink-0 rounded-full object-cover"
       />
       <span

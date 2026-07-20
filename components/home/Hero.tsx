@@ -1,24 +1,13 @@
-import { getImageProps } from "next/image";
+import Image from "next/image";
 import Link from "next/link";
 import { HERO_BLUR } from "@/lib/hero-blur";
 
 export function Hero() {
-  // Hero-ul e elementul LCP al site-ului. Înainte randam DOUĂ <Image priority>
-  // (desktop + mobil), ascunse alternativ din CSS — dar `priority` pune preload
-  // pe amândouă, deci pe mobil se descărca degeaba și varianta de desktop, iar
-  // cele două își furau banda una alteia. Aici folosim un singur <picture> cu
-  // `media`: browserul alege și descarcă EXACT o imagine.
-  // `getImageProps` ne dă srcset-ul optimizat de Next pentru fiecare variantă.
-  const common = {
-    alt: "Cărți și flori uscate pe o masă de lemn",
-    fill: true,
-    priority: true,
-    sizes: "100vw",
-  } as const;
-
-  const desktop = getImageProps({ ...common, src: "/hero-desktop.webp" }).props;
-  const mobile = getImageProps({ ...common, src: "/hero-mobile.webp" }).props;
-
+  // Hero-ul e elementul LCP. Randăm imaginea mobilă cu `priority` (Lighthouse și
+  // majoritatea vizitatorilor sunt pe mobil, deci ea trebuie preîncărcată în
+  // <head>) și cea de desktop fără priority, ascunsă pe mobil (`hidden md:block`,
+  // deci nu se descarcă pe telefon). Un `<picture>` cu <img> simplu NU emite
+  // hint-ul de preload al lui Next — de-aia folosim componenta `Image`.
   return (
     <section className="relative isolate flex min-h-[32rem] items-start overflow-hidden sm:min-h-[34rem] md:items-center">
       {/* Placeholder blur: apare instant ca fundal cât timp se încarcă imaginea
@@ -28,17 +17,22 @@ export function Hero() {
         className="absolute inset-0 bg-cover bg-center"
         style={{ backgroundImage: `url(${HERO_BLUR.mobile})` }}
       />
-      <picture>
-        <source media="(min-width: 768px)" srcSet={desktop.srcSet} sizes={desktop.sizes} />
-        <source media="(max-width: 767px)" srcSet={mobile.srcSet} sizes={mobile.sizes} />
-        {/* eslint-disable-next-line @next/next/no-img-element -- art direction: vezi comentariul de mai sus */}
-        <img
-          {...mobile}
-          srcSet={undefined}
-          alt={common.alt}
-          className="absolute inset-0 h-full w-full object-cover object-bottom md:object-center"
-        />
-      </picture>
+      <Image
+        src="/hero-mobile.webp"
+        alt="Cărți și flori uscate pe o masă de lemn"
+        fill
+        priority
+        fetchPriority="high"
+        sizes="100vw"
+        className="object-cover object-bottom md:hidden"
+      />
+      <Image
+        src="/hero-desktop.webp"
+        alt=""
+        fill
+        sizes="100vw"
+        className="hidden object-cover md:block"
+      />
 
       {/* Voal crem pentru lizibilitatea textului (sus pe mobil, stânga pe desktop) */}
       <div className="absolute inset-0 bg-gradient-to-b from-cream/85 via-cream/30 to-transparent md:bg-gradient-to-r md:from-cream/90 md:via-cream/45 md:to-transparent" />
