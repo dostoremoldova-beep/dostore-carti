@@ -41,6 +41,30 @@ function parseFaqs(
   }
 }
 
+// Recenziile vin dintr-un singur câmp JSON (vezi components/admin/ReviewEditor).
+function parseReviews(
+  value: FormDataEntryValue | null
+): { author: string; rating: number; text: string; date: Date }[] {
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((entry) => {
+      if (typeof entry !== "object" || entry === null) return [];
+      const { author, rating, text, date } = entry as Record<string, unknown>;
+      const a = typeof author === "string" ? author.trim() : "";
+      const t = typeof text === "string" ? text.trim() : "";
+      const r = typeof rating === "number" ? Math.min(5, Math.max(1, Math.round(rating))) : 5;
+      if (!a || !t) return [];
+      // Păstrează data existentă la editare; pune acum pentru recenzii noi.
+      const d = typeof date === "string" && !Number.isNaN(Date.parse(date)) ? new Date(date) : new Date();
+      return [{ author: a, rating: r, text: t, date: d }];
+    });
+  } catch {
+    return [];
+  }
+}
+
 function parseNumber(value: FormDataEntryValue | null): number | undefined {
   if (value === null || value === "") return undefined;
   const parsed = Number(value);
@@ -64,6 +88,7 @@ async function buildBookData(formData: FormData) {
   const pageCount = parseNumber(formData.get("pageCount"));
   const weightGrams = parseNumber(formData.get("weightGrams"));
   const faqs = parseFaqs(formData.get("faqs"));
+  const reviews = parseReviews(formData.get("reviews"));
 
   const publisher = String(formData.get("publisher") ?? "").trim() || undefined;
   const isbn = String(formData.get("isbn") ?? "").trim() || undefined;
@@ -103,6 +128,14 @@ async function buildBookData(formData: FormData) {
     [title, author, category?.name ?? "", ...tags].join(" ")
   );
 
+  // Rating-ul și numărul de recenzii se derivă din recenziile reale, ca stelele
+  // afișate să corespundă mereu cu ce e scris dedesubt.
+  const computedRating =
+    reviews.length > 0
+      ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10
+      : (rating ?? 0);
+  const computedReviewCount = reviews.length > 0 ? reviews.length : (reviewCount ?? 0);
+
   return {
     errors,
     data: {
@@ -116,11 +149,12 @@ async function buildBookData(formData: FormData) {
       price: price ?? 0,
       discountPrice,
       stock,
-      rating,
-      reviewCount,
+      rating: computedRating,
+      reviewCount: computedReviewCount,
       pageCount,
       weightGrams,
       faqs,
+      reviews,
       publisher,
       isbn,
       language,

@@ -8,6 +8,7 @@ import { ImageGallery } from "@/components/books/ImageGallery";
 import { BookGrid } from "@/components/books/BookGrid";
 import { AddToCartButton } from "@/components/books/AddToCartButton";
 import { FaqAccordion } from "@/components/books/FaqAccordion";
+import { Reviews } from "@/components/books/Reviews";
 import { FavoriteButton } from "@/components/books/FavoriteButton";
 
 type PageProps = {
@@ -121,6 +122,8 @@ export default async function BookPage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      <Reviews reviews={book.reviews} />
 
       <FaqAccordion faqs={book.faqs} />
 

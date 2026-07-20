@@ -37,6 +37,9 @@ model Book {
   // Embedded (nu model separat): aparțin exclusiv produsului, se citesc mereu
   // împreună cu el și se rescriu în bloc la salvare.
   faqs           BookFaq[]
+  // Recenzii, administrate din admin. `rating` și `reviewCount` de mai sus se
+  // recalculează automat din ele la salvare.
+  reviews        BookReview[]
   searchText     String
   orderItems     OrderItem[]
   createdAt      DateTime @default(now())
@@ -104,6 +107,14 @@ model Order {
   statusHistory     OrderStatusEvent[] // istoricul stadiilor, cu timestamp
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+}
+
+// O recenzie a unui produs (embedded).
+type BookReview {
+  author String
+  rating Int      // 1–5 stele
+  text   String
+  date   DateTime @default(now())
 }
 
 // O întrebare frecventă atașată unui produs.

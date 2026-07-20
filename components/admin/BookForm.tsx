@@ -6,6 +6,7 @@ import { slugify } from "@/lib/slugify";
 import type { BookFormState } from "@/lib/actions/admin-books";
 import { ImageUploader } from "./ImageUploader";
 import { FaqEditor } from "./FaqEditor";
+import { ReviewEditor } from "./ReviewEditor";
 
 type BookFormAction = (
   prevState: BookFormState,
@@ -251,6 +252,12 @@ export function BookForm({
               placeholder="ex: obiceiuri, productivitate"
               className={inputClass}
             />
+          </Field>
+        </div>
+
+        <div className="sm:col-span-2">
+          <Field label="Recenzii">
+            <ReviewEditor initialReviews={initialBook?.reviews ?? []} />
           </Field>
         </div>
 
