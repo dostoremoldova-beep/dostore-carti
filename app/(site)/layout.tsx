@@ -25,7 +25,9 @@ export const revalidate = 3600;
 const playfairDisplay = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin", "latin-ext"],
-  weight: ["600", "700"],
+  // Doar 600: în tot site-ul, `font-serif` apare exclusiv cu `font-semibold`.
+  // Greutatea 700 se descărca degeaba.
+  weight: ["600"],
   display: "swap",
   preload: false,
 });
