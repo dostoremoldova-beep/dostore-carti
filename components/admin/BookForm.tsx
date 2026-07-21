@@ -7,6 +7,7 @@ import type { BookFormState } from "@/lib/actions/admin-books";
 import { ImageUploader } from "./ImageUploader";
 import { FaqEditor } from "./FaqEditor";
 import { ReviewEditor } from "./ReviewEditor";
+import { SpecEditor } from "./SpecEditor";
 
 type BookFormAction = (
   prevState: BookFormState,
@@ -252,6 +253,12 @@ export function BookForm({
               placeholder="ex: obiceiuri, productivitate"
               className={inputClass}
             />
+          </Field>
+        </div>
+
+        <div className="sm:col-span-2">
+          <Field label="Specificații (etichetă → valoare)">
+            <SpecEditor initialSpecs={initialBook?.specs ?? []} />
           </Field>
         </div>
 

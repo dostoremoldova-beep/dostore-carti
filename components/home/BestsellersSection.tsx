@@ -3,7 +3,7 @@ import { getBestsellers } from "@/lib/books";
 import { BookGrid } from "@/components/books/BookGrid";
 
 export async function BestsellersSection() {
-  const books = await getBestsellers(6);
+  const books = await getBestsellers(4);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">

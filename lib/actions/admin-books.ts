@@ -41,6 +41,24 @@ function parseFaqs(
   }
 }
 
+// Specificațiile vin dintr-un singur câmp JSON (vezi components/admin/SpecEditor).
+function parseSpecs(value: FormDataEntryValue | null): { label: string; value: string }[] {
+  if (typeof value !== "string" || !value.trim()) return [];
+  try {
+    const parsed: unknown = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.flatMap((entry) => {
+      if (typeof entry !== "object" || entry === null) return [];
+      const { label, value } = entry as Record<string, unknown>;
+      const l = typeof label === "string" ? label.trim() : "";
+      const v = typeof value === "string" ? value.trim() : "";
+      return l && v ? [{ label: l, value: v }] : [];
+    });
+  } catch {
+    return [];
+  }
+}
+
 // Recenziile vin dintr-un singur câmp JSON (vezi components/admin/ReviewEditor).
 function parseReviews(
   value: FormDataEntryValue | null
@@ -89,6 +107,7 @@ async function buildBookData(formData: FormData) {
   const weightGrams = parseNumber(formData.get("weightGrams"));
   const faqs = parseFaqs(formData.get("faqs"));
   const reviews = parseReviews(formData.get("reviews"));
+  const specs = parseSpecs(formData.get("specs"));
 
   const publisher = String(formData.get("publisher") ?? "").trim() || undefined;
   const isbn = String(formData.get("isbn") ?? "").trim() || undefined;
@@ -155,6 +174,7 @@ async function buildBookData(formData: FormData) {
       weightGrams,
       faqs,
       reviews,
+      specs,
       publisher,
       isbn,
       language,

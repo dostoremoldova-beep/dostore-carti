@@ -11,6 +11,24 @@ import { CityAutocomplete } from "./CityAutocomplete";
 
 const initialState: CheckoutState = { status: "idle" };
 
+const PAYMENT_METHODS = [
+  {
+    value: "ONLINE",
+    label: "Plătește acum, pe site (card / QR)",
+    hint: "Scanezi un cod QR și plătești instant din aplicația băncii.",
+  },
+  {
+    value: "CARD_ON_DELIVERY",
+    label: "Card la livrare",
+    hint: "Plătești curierului cu cardul, la primirea coletului.",
+  },
+  {
+    value: "CASH_ON_DELIVERY",
+    label: "Numerar la livrare",
+    hint: "Plătești cash curierului, la primirea coletului.",
+  },
+] as const;
+
 // „city" nu e aici: are câmp propriu cu autocomplete din localitățile FAN
 // (vezi CityAutocomplete), fiindcă trebuie să deducă și raionul.
 const FIELDS: {
@@ -126,6 +144,32 @@ export function CheckoutView() {
             </div>
           </div>
 
+          <fieldset className="border-t border-border pt-5">
+            <legend className="mb-3 font-serif text-lg font-semibold text-ink">
+              Metoda de plată
+            </legend>
+            <div className="space-y-2.5">
+              {PAYMENT_METHODS.map((method, index) => (
+                <label
+                  key={method.value}
+                  className="flex cursor-pointer items-start gap-3 rounded-lg border border-border p-3.5 transition-colors has-[:checked]:border-terracotta has-[:checked]:bg-terracotta/5"
+                >
+                  <input
+                    type="radio"
+                    name="paymentMethod"
+                    value={method.value}
+                    defaultChecked={index === 0}
+                    className="mt-0.5 h-4 w-4 accent-terracotta"
+                  />
+                  <span>
+                    <span className="block text-sm font-semibold text-ink">{method.label}</span>
+                    <span className="block text-xs text-ink-soft">{method.hint}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <button
             type="submit"
             disabled={pending}
@@ -133,10 +177,6 @@ export function CheckoutView() {
           >
             {pending ? "Se procesează..." : `Trimite comanda · ${formatPrice(total)}`}
           </button>
-
-          <p className="text-center text-xs text-ink-soft">
-            Plata se face ramburs, la livrare. Îți trimitem confirmarea pe email.
-          </p>
         </form>
 
         <div className="h-fit space-y-4 rounded-xl bg-card p-6 shadow-sm ring-1 ring-border/70">

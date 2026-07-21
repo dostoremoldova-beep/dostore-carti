@@ -44,6 +44,13 @@ function validate(formData: FormData): { values: Record<string, string>; errors:
   // Poate lipsi dacă a scris orașul de mână — nu blocăm comanda pentru asta,
   // dar AWB-ul va cere completarea lui din admin.
   const county = String(formData.get("county") ?? "").trim();
+  // Metoda de plată aleasă (validată la scriere).
+  const paymentMethodRaw = String(formData.get("paymentMethod") ?? "ONLINE").trim();
+  const paymentMethod = (["ONLINE", "CARD_ON_DELIVERY", "CASH_ON_DELIVERY"].includes(
+    paymentMethodRaw
+  )
+    ? paymentMethodRaw
+    : "ONLINE") as "ONLINE" | "CARD_ON_DELIVERY" | "CASH_ON_DELIVERY";
 
   const errors: CheckoutFieldErrors = {};
   if (customerName.length < 3) errors.customerName = "Introdu numele complet.";
@@ -52,7 +59,10 @@ function validate(formData: FormData): { values: Record<string, string>; errors:
   if (shippingAddress.length < 5) errors.shippingAddress = "Introdu adresa completă de livrare.";
   if (city.length < 2) errors.city = "Alege localitatea din listă.";
 
-  return { values: { customerName, email, phone, shippingAddress, city, county }, errors };
+  return {
+    values: { customerName, email, phone, shippingAddress, city, county, paymentMethod },
+    errors,
+  };
 }
 
 /**
@@ -104,6 +114,10 @@ export async function createOrderAndPay(
   }
 
   const { customerName, email, phone, shippingAddress, city, county } = values;
+  const paymentMethod = values.paymentMethod as
+    | "ONLINE"
+    | "CARD_ON_DELIVERY"
+    | "CASH_ON_DELIVERY";
 
   const subtotal = items.reduce((sum, item) => sum + cartItemPrice(item) * item.quantity, 0);
   // Ce plătește clientul: regula noastră (gratuit peste prag). Costul real către
@@ -127,6 +141,7 @@ export async function createOrderAndPay(
       shippingAddress,
       city,
       county: county || null,
+      paymentMethod,
       fanCost,
       subtotal,
       shippingCost,
@@ -194,6 +209,11 @@ export async function createOrderAndPay(
       items: items.map((item) => ({ title: item.title, quantity: item.quantity })),
     }),
   ]);
+
+  // Plata la livrare (card sau numerar): comanda e gata, mergem direct la succes.
+  if (paymentMethod !== "ONLINE") {
+    redirect(`/checkout/succes?order=${orderNumber}`);
+  }
 
   // Plată online prin VictoriaBank (MIA). Fără credențiale, `createQrPayment`
   // întoarce `skipped` și comanda merge pe ramburs (pagina de succes). Cu

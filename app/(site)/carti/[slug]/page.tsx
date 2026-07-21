@@ -1,7 +1,19 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
 import { getBookBySlug, getSimilarBooks } from "@/lib/books";
+
+// Prerandare statică a paginilor de produs (servite din CDN, nu din DB la
+// fiecare request) + ISR: se reîmprospătează la o oră și la orice modificare
+// din admin (revalidatePath). `dynamicParams` rămâne true implicit, deci un
+// produs nou apărut între build-uri se randează on-demand și apoi se cachează.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const books = await prisma.book.findMany({ select: { slug: true } });
+  return books.map((book) => ({ slug: book.slug }));
+}
 import { StarRating } from "@/components/books/StarRating";
 import { PriceTag } from "@/components/books/PriceTag";
 import { ImageGallery } from "@/components/books/ImageGallery";
@@ -101,6 +113,20 @@ export default async function BookPage({ params }: PageProps) {
             <AddToCartButton book={book} outOfStock={outOfStock} variant="full" />
             <FavoriteButton book={book} variant="full" />
           </div>
+
+          {book.specs.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              {book.specs.map((spec) => (
+                <div
+                  key={spec.label}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-cream-soft/60 px-3 py-2"
+                >
+                  <span className="text-xs uppercase tracking-wide text-ink-soft">{spec.label}</span>
+                  <span className="text-sm font-semibold text-ink">{spec.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="mt-8 border-t border-border pt-6">
             <h2 className="font-serif text-lg font-semibold text-ink">Descriere</h2>

@@ -40,7 +40,7 @@ export function Hero() {
       <div className="relative mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 md:py-24 lg:px-8">
         <div className="max-w-md md:max-w-xl">
           <p className="font-medium uppercase tracking-widest text-terracotta">
-            Dostore Carti — Moldova
+            Dostore Cărți — Moldova
           </p>
           <h1 className="mt-3 font-serif text-4xl font-semibold leading-tight text-ink sm:text-5xl">
             Cărți și uleiuri esențiale, alese cu grijă

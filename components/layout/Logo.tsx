@@ -23,7 +23,7 @@ export function Logo({ variant = "dark" }: { variant?: "dark" | "light" }) {
       <span
         className={`font-serif text-2xl font-semibold leading-none tracking-tight ${textColor}`}
       >
-        Dostore <span className={accentColor}>Carti</span>
+        Dostore <span className={accentColor}>Cărți</span>
       </span>
     </Link>
   );

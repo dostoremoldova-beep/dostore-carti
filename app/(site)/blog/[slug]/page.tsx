@@ -3,7 +3,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getPostBySlug, getRelatedPosts, formatPostDate, readingTimeMinutes } from "@/lib/blog";
+import { prisma } from "@/lib/prisma";
 import { Markdown } from "@/components/blog/Markdown";
+
+// Prerandare statică + ISR (ca la paginile de produs): articolele se servesc
+// din CDN, nu din DB la fiecare request.
+export const revalidate = 3600;
+
+export async function generateStaticParams() {
+  const posts = await prisma.blogPost.findMany({
+    where: { published: true },
+    select: { slug: true },
+  });
+  return posts.map((post) => ({ slug: post.slug }));
+}
 
 type PageProps = {
   params: Promise<{ slug: string }>;

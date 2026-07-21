@@ -40,6 +40,9 @@ model Book {
   // Recenzii, administrate din admin. `rating` și `reviewCount` de mai sus se
   // recalculează automat din ele la salvare.
   reviews        BookReview[]
+  // Specificații libere (etichetă + valoare), administrate din admin și afișate
+  // ca badge-uri pe pagina produsului. Ex: „Vârstă"→„12+", „Pagini"→„300".
+  specs          BookSpec[]
   searchText     String
   orderItems     OrderItem[]
   createdAt      DateTime @default(now())
@@ -79,6 +82,12 @@ enum PaymentStatus {
   REFUNDED
 }
 
+enum PaymentMethod {
+  ONLINE            // plată pe site prin QR (VictoriaBank MIA)
+  CARD_ON_DELIVERY  // card la livrare
+  CASH_ON_DELIVERY  // numerar la livrare
+}
+
 model Order {
   id                String             @id @default(auto()) @map("_id") @db.ObjectId
   orderNumber       String             @unique
@@ -95,6 +104,9 @@ model Order {
   shippingCost      Float
   total             Float
   status            OrderStatus        @default(PENDING)
+  // Cum alege clientul să plătească: ONLINE (QR pe site), CARD_ON_DELIVERY
+  // (card la livrare) sau CASH_ON_DELIVERY (numerar la livrare).
+  paymentMethod     PaymentMethod      @default(ONLINE)
   paymentStatus     PaymentStatus      @default(UNPAID)
   paymentId         String?
   // Plată VictoriaBank MIA (QR). Le păstrăm ca să interogăm statusul la bancă
@@ -112,6 +124,12 @@ model Order {
   statusHistory     OrderStatusEvent[] // istoricul stadiilor, cu timestamp
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
+}
+
+// O specificație a produsului (etichetă + valoare), embedded.
+type BookSpec {
+  label String // ex: „Vârstă", „Pagini", „Categorie"
+  value String // ex: „12+", „300", „Dezvoltare personală"
 }
 
 // O recenzie a unui produs (embedded).

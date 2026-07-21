@@ -33,7 +33,7 @@ export function CategoriesDropdown({ categories }: { categories: Category[] }) {
       {/* `pt-2` păstrează o punte invizibilă între buton și panou, ca mouse-ul
           să nu treacă printr-un gol și să închidă meniul. */}
       <div className="invisible absolute left-0 top-full z-50 pt-2 opacity-0 transition-[opacity,visibility] duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        <div className="grid w-[34rem] max-w-[90vw] grid-cols-2 gap-0.5 rounded-xl border border-border bg-card p-3 shadow-xl">
+        <div className="flex w-64 max-w-[90vw] flex-col gap-0.5 rounded-xl border border-border bg-card p-3 shadow-xl">
           {categories.map((category) => (
             <Link
               key={category.id}
@@ -50,7 +50,7 @@ export function CategoriesDropdown({ categories }: { categories: Category[] }) {
           ))}
           <Link
             href="/categorii"
-            className="col-span-2 mt-1 border-t border-border pt-2.5 text-center text-sm font-semibold text-navy transition-colors hover:text-terracotta"
+            className="mt-1 border-t border-border pt-2.5 text-center text-sm font-semibold text-navy transition-colors hover:text-terracotta"
           >
             Vezi toate categoriile →
           </Link>
