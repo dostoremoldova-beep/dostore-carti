@@ -97,6 +97,11 @@ model Order {
   status            OrderStatus        @default(PENDING)
   paymentStatus     PaymentStatus      @default(UNPAID)
   paymentId         String?
+  // Plată VictoriaBank MIA (QR). Le păstrăm ca să interogăm statusul la bancă
+  // și să potrivim semnalele (webhook) cu comanda.
+  qrHeaderUUID      String?
+  qrExtensionUUID   String?
+  qrPayUrl          String?            // payload-ul QR (link), din care regenerăm imaginea
   // Tracking livrare
   trackingNumber    String?            // AWB de la curier (FANcourier)
   estimatedDelivery DateTime?          // termen estimat de livrare

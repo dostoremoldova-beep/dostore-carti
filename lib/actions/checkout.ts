@@ -8,18 +8,8 @@ import { tgNewOrder } from "@/lib/telegram";
 import { cartItemPrice, FREE_SHIPPING_THRESHOLD, SHIPPING_COST } from "@/lib/store/cart";
 import { getShippingPrice } from "@/lib/shipping/fan";
 import { calculateParcelWeightKg } from "@/lib/shipping/weight";
-import { createPayment } from "@/lib/payments/victoriabank";
-import { headers } from "next/headers";
+import { createQrPayment } from "@/lib/payments/victoriabank";
 import type { CartItem } from "@/lib/store/cart";
-
-// Originul cererii (schema + host), pentru URL-urile de callback/return trimise băncii.
-async function resolveOrigin(): Promise<string> {
-  const headersList = await headers();
-  const host = headersList.get("host") ?? "localhost:3000";
-  const protocol =
-    headersList.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
-  return `${protocol}://${host}`;
-}
 
 export type CheckoutFieldErrors = Partial<
   Record<"customerName" | "email" | "phone" | "shippingAddress" | "city", string>
@@ -205,31 +195,28 @@ export async function createOrderAndPay(
     }),
   ]);
 
-  // Plată online prin VictoriaBank (MIA). Fără credențiale, `createPayment`
+  // Plată online prin VictoriaBank (MIA). Fără credențiale, `createQrPayment`
   // întoarce `skipped` și comanda merge pe ramburs (pagina de succes). Cu
-  // credențiale, generăm sesiunea de plată și redirectăm clientul spre bancă.
-  const origin = await resolveOrigin();
-  let payment: Awaited<ReturnType<typeof createPayment>> | null = null;
+  // credențiale, generăm QR-ul și trimitem clientul la pagina de plată.
+  let qr: Awaited<ReturnType<typeof createQrPayment>> | null = null;
   try {
-    payment = await createPayment({
-      orderNumber,
-      amount: total,
-      description: `Comandă Dostore Carti ${orderNumber}`,
-      callbackUrl: `${origin}/api/payments/victoriabank/callback`,
-      returnUrl: `${origin}/checkout/succes?order=${orderNumber}`,
-    });
+    qr = await createQrPayment({ orderNumber, amount: total });
   } catch (error) {
-    // Plata a picat la inițiere: comanda e deja salvată, deci nu o pierdem —
+    // QR-ul a picat la inițiere: comanda e deja salvată, deci nu o pierdem —
     // o lăsăm pe ramburs în loc să blocăm clientul.
     console.error("[checkout] inițierea plății VictoriaBank a eșuat:", error);
   }
 
-  if (payment && !payment.skipped && payment.paymentId) {
+  if (qr && !qr.skipped && qr.qrHeaderUUID) {
     await prisma.order.update({
       where: { id: order.id },
-      data: { paymentId: payment.paymentId },
+      data: {
+        qrHeaderUUID: qr.qrHeaderUUID,
+        qrExtensionUUID: qr.qrExtensionUUID,
+        qrPayUrl: qr.payUrl,
+      },
     });
-    redirect(payment.payUrl);
+    redirect(`/checkout/plata?order=${orderNumber}`);
   }
 
   redirect(`/checkout/succes?order=${orderNumber}`);

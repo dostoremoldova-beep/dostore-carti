@@ -1,187 +1,170 @@
 import "server-only";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Integrare plată VictoriaBank — MIA (Moldova Instant Payments).
+// VictoriaBank — MIA (Moldova Instant Payments), IPS Business WebApi v2.1.0.
+// Docs oficiale primite de la utilizator. Flux: la checkout generăm un QR
+// dinamic cu suma fixă a comenzii; clientul scanează / deschide linkul și
+// plătește în aplicația lui de banking; noi confirmăm plata întrebând API-ul
+// băncii (status autentificat) — nu ne bazăm pe input neautentificat.
 //
-// Fluxul cerut: la finalizarea comenzii se generează un link + cod QR de plată;
-// clientul plătește în aplicația lui de banking, iar banca ne trimite un
-// callback de confirmare. Ăsta e sistemul MIA (plăți instant prin QR/link),
-// nu plata clasică cu card (VPOS).
+// Autentificare: POST /identity/token (grant_type=password) → accessToken (JWT).
+// Creare QR:     POST /api/v1/qr        → qrHeaderUUID, qrExtensionUUID, qrAsImage
+// Status:        GET  /api/v1/qr/{qrHeaderUUID}/status
 //
-// ⚠️ STARE: schelet funcțional, în așteptarea credențialelor + specificației
-// oficiale de la VictoriaBank (Card.Acceptare@vb.md / API-ul Business IPS).
-// Endpoint-urile și numele de câmpuri de mai jos sunt PLACEHOLDER, izolate în
-// blocul CONFIG ca să le completezi într-un singur loc când primești docs.
-//
-// Ca la maib/FAN/email: fără credențiale reale intrăm în mod no-op — plata se
-// consideră „de achitat la livrare" și comanda merge mai departe, ca site-ul
-// să funcționeze până la go-live.
+// Mod no-op fără credențiale (ca la FAN/email): comanda merge pe ramburs.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// ┌── CONFIG: singurul loc de completat după ce primești documentația MIA ──┐
-const CONFIG = {
-  // Bază API (sandbox vs producție vin din docs).
-  baseUrl: process.env.VB_MIA_BASE_URL ?? "https://ipspj.victoriabank.md/api",
-  // OAuth2 client_credentials pentru API-ul Business IPS.
-  clientId: process.env.VB_MIA_CLIENT_ID,
-  clientSecret: process.env.VB_MIA_CLIENT_SECRET,
-  // ID-ul de comerciant / terminal alocat de bancă.
-  merchantId: process.env.VB_MIA_MERCHANT_ID,
-  // Cheia cu care banca semnează callback-urile (verificare semnătură).
-  signatureKey: process.env.VB_MIA_SIGNATURE_KEY,
-  // Rute concrete — de confirmat din spec.
-  tokenPath: "/oauth/token",
-  createPaymentPath: "/v2/payments",
-  statusPath: (id: string) => `/v2/payments/${id}`,
-};
-// └────────────────────────────────────────────────────────────────────────┘
+const BASE_URL = process.env.VB_MIA_BASE_URL ?? "https://test-ipspj.victoriabank.md";
+const USERNAME = process.env.VB_MIA_USERNAME;
+const PASSWORD = process.env.VB_MIA_PASSWORD;
+const IBAN = process.env.VB_MIA_IBAN; // contul unde se încasează
+const DBA = (process.env.VB_MIA_DBA ?? "Dostore Carti").slice(0, 25); // nume afișat în app
 
-export const isVictoriaBankConfigured = Boolean(
-  CONFIG.clientId && CONFIG.clientSecret && CONFIG.merchantId
-);
+export const isVictoriaBankConfigured = Boolean(USERNAME && PASSWORD && IBAN);
 
-export type CreatePaymentInput = {
-  orderNumber: string;
-  amount: number; // în MDL
-  description: string;
-  callbackUrl: string; // unde ne notifică banca
-  returnUrl: string; // unde revine clientul după plată
-};
-
-export type PaymentSession = {
-  paymentId: string;
-  /** Link către pagina/aplicația de plată (redirect direct). */
-  payUrl: string;
-  /** Payload-ul pentru codul QR (dacă vrei să-l afișezi pe site). */
-  qrData?: string;
-  /** true în mod no-op — apelantul trece pe fluxul ramburs. */
-  skipped?: boolean;
-};
-
-// Token OAuth cachat, refolosit până aproape de expirare.
-let tokenCache: { token: string; expiresAt: number } | null = null;
+// ── Token OAuth (JWT), cachat și refolosit până aproape de expirare ──────────
+let tokenCache: { accessToken: string; expiresAt: number } | null = null;
 
 async function getAccessToken(): Promise<string> {
   const now = Date.now();
-  if (tokenCache && tokenCache.expiresAt - 30_000 > now) return tokenCache.token;
+  if (tokenCache && tokenCache.expiresAt - 30_000 > now) return tokenCache.accessToken;
 
-  const res = await fetch(`${CONFIG.baseUrl}${CONFIG.tokenPath}`, {
+  const res = await fetch(`${BASE_URL}/identity/token`, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
-      grant_type: "client_credentials",
-      client_id: CONFIG.clientId!,
-      client_secret: CONFIG.clientSecret!,
+      grant_type: "password",
+      username: USERNAME!,
+      password: PASSWORD!,
     }),
+    cache: "no-store",
   });
 
   if (!res.ok) {
-    throw new Error(`VictoriaBank: obținerea token-ului a eșuat (${res.status})`);
+    throw new Error(`VictoriaBank: autentificarea a eșuat (${res.status})`);
   }
 
-  const data = (await res.json()) as { access_token?: string; expires_in?: number };
-  if (!data.access_token) throw new Error("VictoriaBank: răspuns fără access_token.");
+  const data = (await res.json()) as { accessToken?: string; expiresIn?: number };
+  if (!data.accessToken) throw new Error("VictoriaBank: răspuns fără accessToken.");
 
   tokenCache = {
-    token: data.access_token,
-    expiresAt: now + (data.expires_in ?? 300) * 1000,
+    accessToken: data.accessToken,
+    expiresAt: now + (data.expiresIn ?? 3600) * 1000,
   };
-  return tokenCache.token;
+  return tokenCache.accessToken;
 }
 
-/**
- * Creează sesiunea de plată MIA. Fără credențiale întoarce `{ skipped: true }`,
- * iar checkout-ul continuă pe ramburs. NU aruncă pe calea no-op.
- */
-export async function createPayment(input: CreatePaymentInput): Promise<PaymentSession> {
+// ── Creare QR de plată ────────────────────────────────────────────────────────
+
+export type CreateQrInput = {
+  orderNumber: string;
+  amount: number; // MDL
+};
+
+export type QrSession = {
+  qrHeaderUUID: string;
+  qrExtensionUUID: string;
+  /** Linkul de plată (deschis în app-ul de banking). */
+  payUrl: string;
+  /** Codul QR ca PNG base64 (fără prefix data:). */
+  qrImageBase64: string;
+  skipped?: boolean;
+};
+
+/** Referință externă acceptată de bancă: alfanumeric, fără spații, ≤35 car. */
+function sanitizeRef(orderNumber: string): string {
+  return orderNumber.replace(/[^a-zA-Z0-9]/g, "").slice(0, 35);
+}
+
+export async function createQrPayment(input: CreateQrInput): Promise<QrSession> {
   if (!isVictoriaBankConfigured) {
     console.info(
       `[victoriabank] SKIP (necredentiat) → comanda ${input.orderNumber} merge pe ramburs`
     );
-    return { paymentId: "", payUrl: input.returnUrl, skipped: true };
+    return { qrHeaderUUID: "", qrExtensionUUID: "", payUrl: "", qrImageBase64: "", skipped: true };
   }
 
   const token = await getAccessToken();
 
-  const res = await fetch(`${CONFIG.baseUrl}${CONFIG.createPaymentPath}`, {
+  const res = await fetch(`${BASE_URL}/api/v1/qr?width=320&height=320`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
     body: JSON.stringify({
-      merchantId: CONFIG.merchantId,
-      amount: input.amount,
-      currency: "MDL",
-      orderId: input.orderNumber,
-      description: input.description,
-      callbackUrl: input.callbackUrl,
-      returnUrl: input.returnUrl,
+      // QR dinamic cu sumă fixă = cel mai potrivit pentru checkout e-commerce.
+      header: { qrType: "DYNM", amountType: "Fixed", pmtContext: "e" },
+      extension: {
+        creditorAccount: { iban: IBAN },
+        amount: { sum: input.amount.toFixed(2), currency: "MDL" },
+        dba: DBA,
+        remittanceInfo4Payer: `Comanda ${input.orderNumber}`.slice(0, 35),
+        creditorRef: sanitizeRef(input.orderNumber),
+        // Timp de viață al QR-ului: 30 de minute ca să apuce clientul să plătească.
+        ttl: { length: 30, units: "mm" },
+      },
     }),
+    cache: "no-store",
   });
 
   if (!res.ok) {
-    throw new Error(`VictoriaBank: crearea plății a eșuat (${res.status})`);
+    const text = await res.text().catch(() => "");
+    throw new Error(`VictoriaBank: crearea QR a eșuat (${res.status}): ${text.slice(0, 200)}`);
   }
 
-  // Numele de câmpuri din răspuns — de aliniat la spec când vine.
   const data = (await res.json()) as {
-    id?: string;
-    paymentId?: string;
-    payUrl?: string;
-    paymentUrl?: string;
-    qr?: string;
-    qrCode?: string;
+    qrHeaderUUID?: string;
+    qrExtensionUUID?: string;
+    qrAsText?: string;
+    qrAsImage?: string;
   };
 
-  const paymentId = data.paymentId ?? data.id ?? "";
-  const payUrl = data.payUrl ?? data.paymentUrl ?? input.returnUrl;
-
-  return { paymentId, payUrl, qrData: data.qrCode ?? data.qr };
-}
-
-export type CallbackResult = {
-  orderNumber: string;
-  paid: boolean;
-  paymentId: string;
-};
-
-/**
- * Validează și interpretează callback-ul băncii. La fel ca la maib, semnătura
- * se verifică ÎNAINTE de a atinge comanda — un callback nesemnat corect nu
- * trebuie să marcheze nimic plătit. Întoarce null dacă semnătura e invalidă.
- */
-export async function verifyCallback(
-  rawBody: string,
-  signature: string | null
-): Promise<CallbackResult | null> {
-  if (!CONFIG.signatureKey) {
-    console.warn("[victoriabank] callback fără cheie de semnătură configurată — ignorat.");
-    return null;
+  if (!data.qrHeaderUUID || !data.qrAsText) {
+    throw new Error("VictoriaBank: răspuns QR incomplet.");
   }
-
-  // TODO(spec): algoritmul exact de semnătură MIA (HMAC? RSA? ce câmpuri intră)
-  // se confirmă din documentație. Deliberat NU acceptăm callback-uri până atunci.
-  const crypto = await import("node:crypto");
-  const expected = crypto
-    .createHmac("sha256", CONFIG.signatureKey)
-    .update(rawBody)
-    .digest("hex");
-
-  if (!signature || signature !== expected) {
-    console.error("[victoriabank] semnătură callback invalidă — respins.");
-    return null;
-  }
-
-  const data = JSON.parse(rawBody) as {
-    orderId?: string;
-    status?: string;
-    paymentId?: string;
-  };
 
   return {
-    orderNumber: String(data.orderId ?? ""),
-    paid: data.status === "PAID" || data.status === "SUCCESS",
-    paymentId: String(data.paymentId ?? ""),
+    qrHeaderUUID: data.qrHeaderUUID,
+    qrExtensionUUID: data.qrExtensionUUID ?? "",
+    payUrl: data.qrAsText,
+    qrImageBase64: data.qrAsImage ?? "",
   };
+}
+
+// ── Status QR (sursa autoritară de confirmare a plății) ──────────────────────
+
+export type QrStatus = "Active" | "Paid" | "Expired" | "Cancelled" | "Replaced" | "Inactive";
+
+/** Statusuri finale — se poate opri polling-ul. */
+export const FINAL_QR_STATUSES: QrStatus[] = ["Paid", "Expired", "Cancelled", "Inactive"];
+
+export type QrStatusResult = {
+  status: QrStatus;
+  /** Referința plății (segmentul 4 = id tranzacție, pentru eventuale returnări). */
+  paymentReference?: string;
+};
+
+/** Întreabă banca statusul QR-ului. Nu aruncă — întoarce null la eșec. */
+export async function getQrStatus(qrHeaderUUID: string): Promise<QrStatusResult | null> {
+  if (!isVictoriaBankConfigured || !qrHeaderUUID) return null;
+
+  try {
+    const token = await getAccessToken();
+    const res = await fetch(`${BASE_URL}/api/v1/qr/${qrHeaderUUID}/status?nbOfTxs=1`, {
+      headers: { Authorization: `Bearer ${token}` },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as {
+      status?: QrStatus;
+      extensions?: { payments?: { reference?: string }[] }[];
+    };
+
+    return {
+      status: (data.status ?? "Active") as QrStatus,
+      paymentReference: data.extensions?.[0]?.payments?.[0]?.reference,
+    };
+  } catch (error) {
+    console.error("[victoriabank] getQrStatus a eșuat:", error);
+    return null;
+  }
 }
