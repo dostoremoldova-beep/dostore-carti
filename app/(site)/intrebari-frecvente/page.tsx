@@ -29,7 +29,7 @@ const faqs = [
   {
     question: "Cum verific statusul comenzii mele?",
     answer:
-      "Vei primi un email de confirmare imediat după plasarea comenzii. Pentru orice detaliu suplimentar, ne poți contacta oricând la contact@bookstore.md.",
+      "Vei primi un email de confirmare imediat după plasarea comenzii. Pentru orice detaliu suplimentar, ne poți contacta oricând la dostore.moldova@gmail.com.",
   },
   {
     question: "Aveți cărți în stoc pe care nu le văd pe site?",

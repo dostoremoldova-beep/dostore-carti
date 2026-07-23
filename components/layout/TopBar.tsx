@@ -12,7 +12,7 @@ export function TopBar() {
         <div className="hidden items-center gap-5 sm:flex">
           <a href="tel:+37322000000" className="flex items-center gap-1.5 hover:text-gold">
             <Phone className="h-3.5 w-3.5" aria-hidden="true" />
-            <span>+373 22 000 000</span>
+            <span>+373 068 812 853</span>
           </a>
           <span className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" aria-hidden="true" />

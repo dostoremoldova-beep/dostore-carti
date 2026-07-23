@@ -24,7 +24,7 @@ const sections = [
   },
   {
     title: "5. Drepturile tale",
-    body: "Poți solicita oricând acces, corectarea sau ștergerea datelor tale personale, scriind la contact@bookstore.md.",
+    body: "Poți solicita oricând acces, corectarea sau ștergerea datelor tale personale, scriind la dostore.moldova@gmail.com.",
   },
   {
     title: "6. Cookie-uri",

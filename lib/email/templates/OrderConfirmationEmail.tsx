@@ -89,7 +89,7 @@ export function OrderConfirmationEmail({
 
       <Text style={{ ...styles.paragraph, margin: "24px 0 0" }}>
         Ai întrebări despre comandă? Răspunde la acest email sau scrie-ne la
-        contact@bookstore.md.
+        dostore.moldova@gmail.com.
       </Text>
     </EmailLayout>
   );

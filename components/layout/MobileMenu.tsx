@@ -73,7 +73,7 @@ export function MobileMenu() {
             <div className="mt-auto space-y-2 border-t border-cream/10 px-4 py-4 text-sm text-cream/80">
               <a href="tel:+37322000000" className="flex items-center gap-2 hover:text-gold">
                 <Phone className="h-4 w-4" aria-hidden="true" />
-                +373 22 000 000
+                +373 068 812 853
               </a>
               <p className="flex items-center gap-2">
                 <Clock className="h-4 w-4" aria-hidden="true" />

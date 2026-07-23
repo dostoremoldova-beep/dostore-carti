@@ -170,6 +170,42 @@ export function CheckoutView() {
             </div>
           </fieldset>
 
+          <div className="border-t border-border pt-5">
+            <label className="flex cursor-pointer items-start gap-3">
+              <input
+                type="checkbox"
+                name="terms"
+                defaultChecked={state.values?.terms === "on"}
+                aria-invalid={Boolean(state.fieldErrors?.terms)}
+                className="mt-0.5 h-4.5 w-4.5 shrink-0 rounded border-border accent-terracotta"
+              />
+              <span className="text-sm leading-relaxed text-ink-soft">
+                Am citit și accept{" "}
+                <Link href="/termeni-si-conditii" target="_blank" className="font-medium text-terracotta underline">
+                  Termenii și condițiile
+                </Link>
+                ,{" "}
+                <Link href="/confidentialitate" target="_blank" className="font-medium text-terracotta underline">
+                  Politica de confidențialitate
+                </Link>{" "}
+                și{" "}
+                <Link href="/confidentialitate#cookies" target="_blank" className="font-medium text-terracotta underline">
+                  Politica de cookie-uri
+                </Link>
+                .
+              </span>
+            </label>
+            {state.fieldErrors?.terms ? (
+              <p role="alert" className="mt-2 text-xs font-medium text-terracotta">
+                {state.fieldErrors.terms}
+              </p>
+            ) : (
+              <p className="mt-2 text-xs text-ink-soft">
+                Acceptul e necesar ca să poți plasa comanda și să primești produsele.
+              </p>
+            )}
+          </div>
+
           <button
             type="submit"
             disabled={pending}

@@ -25,12 +25,12 @@ export default function ContactPage() {
           </span>
           <div>
             <p className="font-semibold text-ink">Telefon</p>
-            <p className="mt-1 text-sm text-ink-soft">+373 22 000 000</p>
+            <p className="mt-1 text-sm text-ink-soft">+373 068 812 853</p>
           </div>
         </a>
 
         <a
-          href="mailto:contact@bookstore.md"
+          href="mailto:dostore.moldova@gmail.com"
           className="flex items-start gap-3 rounded-xl bg-card p-6 shadow-sm ring-1 ring-border/70 transition-colors hover:ring-terracotta/50"
         >
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cream-soft text-terracotta">
@@ -38,7 +38,7 @@ export default function ContactPage() {
           </span>
           <div>
             <p className="font-semibold text-ink">Email</p>
-            <p className="mt-1 text-sm text-ink-soft">contact@bookstore.md</p>
+            <p className="mt-1 text-sm text-ink-soft">dostore.moldova@gmail.com</p>
           </div>
         </a>
 

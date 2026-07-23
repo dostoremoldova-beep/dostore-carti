@@ -53,7 +53,7 @@ export function EmailLayout({
             <Text style={styles.footerText}>
               Dostore Carti — librăria ta online din Moldova.
               <br />
-              Str. Ismail 47, Chișinău · +373 22 000 000 · contact@bookstore.md
+              Str. Ismail 47, Chișinău · +373 068 812 853 · dostore.moldova@gmail.com
             </Text>
           </Section>
         </Container>

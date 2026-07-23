@@ -12,7 +12,7 @@ import { createQrPayment } from "@/lib/payments/victoriabank";
 import type { CartItem } from "@/lib/store/cart";
 
 export type CheckoutFieldErrors = Partial<
-  Record<"customerName" | "email" | "phone" | "shippingAddress" | "city", string>
+  Record<"customerName" | "email" | "phone" | "shippingAddress" | "city" | "terms", string>
 >;
 
 export type CheckoutState = {
@@ -52,7 +52,16 @@ function validate(formData: FormData): { values: Record<string, string>; errors:
     ? paymentMethodRaw
     : "ONLINE") as "ONLINE" | "CARD_ON_DELIVERY" | "CASH_ON_DELIVERY";
 
+  // Acordul cu termenii, confidențialitatea și cookie-urile — obligatoriu.
+  // Validat pe SERVER, nu doar din browser: un client care ocolește formularul
+  // nu trebuie să poată plasa comandă fără consimțământ.
+  const termsAccepted = formData.get("terms") === "on";
+
   const errors: CheckoutFieldErrors = {};
+  if (!termsAccepted) {
+    errors.terms =
+      "Trebuie să accepți termenii, politica de confidențialitate și cookie-urile ca să poți plasa comanda.";
+  }
   if (customerName.length < 3) errors.customerName = "Introdu numele complet.";
   if (!EMAIL_REGEX.test(email)) errors.email = "Introdu o adresă de email validă.";
   if (!PHONE_REGEX.test(phone)) errors.phone = "Introdu un număr de telefon valid.";
@@ -60,7 +69,7 @@ function validate(formData: FormData): { values: Record<string, string>; errors:
   if (city.length < 2) errors.city = "Alege localitatea din listă.";
 
   return {
-    values: { customerName, email, phone, shippingAddress, city, county, paymentMethod },
+    values: { customerName, email, phone, shippingAddress, city, county, paymentMethod, terms: termsAccepted ? "on" : "" },
     errors,
   };
 }
@@ -142,6 +151,8 @@ export async function createOrderAndPay(
       city,
       county: county || null,
       paymentMethod,
+      // Dovada consimțământului, cu momentul exact.
+      termsAcceptedAt: new Date(),
       fanCost,
       subtotal,
       shippingCost,

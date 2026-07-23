@@ -27,11 +27,11 @@ export default function CarierePage() {
             oportunități.
           </p>
           <a
-            href="mailto:cariere@bookstore.md"
+            href="mailto:dostore.moldova@gmail.com"
             className="mt-3 inline-flex items-center gap-1.5 text-sm font-medium text-terracotta hover:underline"
           >
             <Mail className="h-4 w-4" aria-hidden="true" />
-            cariere@bookstore.md
+            dostore.moldova@gmail.com
           </a>
         </div>
       </div>

@@ -39,7 +39,7 @@ export default function ReturSiRambursarePage() {
             <h2 className="font-serif text-xl font-semibold text-ink">Cum returnezi</h2>
           </div>
           <p className="mt-4 text-sm text-ink-soft">
-            Scrie-ne la contact@bookstore.md cu numărul comenzii și motivul returului. Îți
+            Scrie-ne la dostore.moldova@gmail.com cu numărul comenzii și motivul returului. Îți
             vom confirma adresa de retur și pașii următori în cel mai scurt timp.
           </p>
         </section>
