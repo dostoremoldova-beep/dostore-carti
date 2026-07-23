@@ -19,8 +19,11 @@ const SYNONYMS: Record<string, string[]> = {
   networking: ["leadership", "network", "marketing"],
   business: ["leadership", "network", "marketing", "afaceri"],
   afaceri: ["leadership", "network", "marketing"],
-  eticheta: ["etichete", "cartonase", "pliante"],
-  etichete: ["cartonase", "pliante", "materiale"],
+  eticheta: ["accesorii", "etichete", "cartonase", "pliante"],
+  etichete: ["accesorii", "cartonase", "pliante", "materiale"],
+  pliante: ["accesorii", "cartonase", "etichete"],
+  cartonase: ["accesorii", "etichete", "pliante"],
+  accesoriu: ["accesorii"],
 };
 
 // Extinde lista de cuvinte căutate cu sinonimele lor (dacă există).
