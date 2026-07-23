@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CreditCard, ShieldCheck, Banknote } from "lucide-react";
+import Image from "next/image";
+import { CreditCard, ShieldCheck, Banknote, QrCode } from "lucide-react";
 import { Logo } from "./Logo";
 import { footerInfoLinks, footerHelpLinks } from "@/lib/nav-links";
 import { FacebookIcon, InstagramIcon, TikTokIcon } from "./SocialIcons";
@@ -76,18 +77,41 @@ export function Footer() {
             <h3 className="font-serif text-lg font-semibold">Plăți sigure</h3>
             <ul className="mt-4 space-y-2.5 text-sm text-cream/70">
               <li className="flex items-center gap-2">
+                <QrCode className="h-4.5 w-4.5 text-gold" aria-hidden="true" />
+                Plată online prin QR
+              </li>
+              <li className="flex items-center gap-2">
                 <CreditCard className="h-4.5 w-4.5 text-gold" aria-hidden="true" />
-                Ramburs la livrare
+                Card la livrare
               </li>
               <li className="flex items-center gap-2">
                 <Banknote className="h-4.5 w-4.5 text-gold" aria-hidden="true" />
-                Ramburs la livrare
+                Numerar la livrare
               </li>
               <li className="flex items-center gap-2">
                 <ShieldCheck className="h-4.5 w-4.5 text-gold" aria-hidden="true" />
                 Plăți criptate și securizate
               </li>
             </ul>
+
+            {/* Siglele partenerilor de plată, în variantă albă ca să stea direct
+                pe navy, fără cutie de fundal. La MIA am păstrat bulinele colorate. */}
+            <div className="mt-6 flex flex-col items-start gap-4">
+              <Image
+                src="/plati/mia-alb.png"
+                alt="MIA — plăți instant"
+                width={193}
+                height={48}
+                className="h-11 w-auto object-contain"
+              />
+              <Image
+                src="/plati/victoriabank-alb.png"
+                alt="VictoriaBank"
+                width={233}
+                height={48}
+                className="h-8 w-auto object-contain"
+              />
+            </div>
           </div>
         </div>
 

@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   // bundler-ul trage tot modulul ca să găsească cele ~20 pe care le folosim.
   experimental: {
     optimizePackageImports: ["lucide-react"],
+    // Cache-ul client pentru navigarea înapoi. Fără el, o pagină dinamică
+    // (ex. /carti) se re-randează la „back", iar browserul restaurează scroll-ul
+    // înainte să existe conținutul — utilizatorul ajunge mult mai sus decât era
+    // (măsurat: 1400px → 261px pe mobil, după intrarea pe un produs).
+    staleTimes: { dynamic: 60, static: 180 },
   },
   images: {
     remotePatterns: [
