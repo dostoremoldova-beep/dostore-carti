@@ -54,6 +54,7 @@ export function Reviews({ reviews }: { reviews: Review[] }) {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
+                  timeZone: "Europe/Chisinau",
                 }).format(new Date(review.date))}
               </time>
             </div>

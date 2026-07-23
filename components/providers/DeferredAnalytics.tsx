@@ -17,13 +17,26 @@ export function DeferredAnalytics() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
-    const handle = idle(() => setReady(true));
-    return () => {
-      if (window.cancelIdleCallback && typeof handle === "number") {
-        window.cancelIdleCallback(handle);
-      }
+    // Cerință legală: analytics-ul pornește DOAR dacă vizitatorul a acceptat
+    // cookie-urile (vezi CookieConsent). Fără accept, nu încărcăm nimic.
+    const hasConsent = () => localStorage.getItem("dostore-cookie-consent") === "accepted";
+
+    const start = () => {
+      const idle = window.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
+      idle(() => setReady(true));
     };
+
+    if (hasConsent()) {
+      start();
+      return;
+    }
+
+    // Dacă acceptă mai târziu din banner, pornim fără reîncărcare.
+    const onConsent = (e: Event) => {
+      if ((e as CustomEvent<string>).detail === "accepted") start();
+    };
+    window.addEventListener("cookie-consent", onConsent);
+    return () => window.removeEventListener("cookie-consent", onConsent);
   }, []);
 
   if (!ready) return null;

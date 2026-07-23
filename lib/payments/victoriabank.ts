@@ -142,6 +142,80 @@ export type QrStatusResult = {
   paymentReference?: string;
 };
 
+// ── Returnarea banilor ───────────────────────────────────────────────────────
+//
+// ⚠️ Regulă critică a băncii: o tranzacție poate fi returnată O SINGURĂ DATĂ.
+// După o returnare parțială, restul NU mai poate fi returnat prin API (dă 404).
+// Deci suma se decide dintr-un singur apel.
+//
+// `id` = al 4-lea segment al referinței de plată (o salvăm în order.paymentId).
+
+/** Extrage id-ul de tranzacție din referința de plată (segmentul 4). */
+export function transactionIdFromReference(reference: string): string | null {
+  const parts = reference.split("|");
+  return parts.length >= 4 ? parts[3] : null;
+}
+
+export type RefundResult = { ok: boolean; message: string };
+
+/**
+ * Returnează banii: integral (fără sumă) sau parțial (cu sumă).
+ * Nu aruncă — întoarce mereu un rezultat descriptiv pentru UI.
+ */
+export async function refundPayment(
+  paymentReference: string,
+  amount?: number
+): Promise<RefundResult> {
+  if (!isVictoriaBankConfigured) {
+    return { ok: false, message: "VictoriaBank nu e configurat." };
+  }
+
+  const txId = transactionIdFromReference(paymentReference);
+  if (!txId) {
+    return { ok: false, message: "Referință de plată invalidă (lipsește id-ul tranzacției)." };
+  }
+
+  try {
+    const token = await getAccessToken();
+    const isPartial = typeof amount === "number" && amount > 0;
+    const url = isPartial
+      ? `${BASE_URL}/api/v1/transaction/${txId}/partial-refund`
+      : `${BASE_URL}/api/v1/transaction/${txId}`;
+
+    const res = await fetch(url, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        ...(isPartial ? { "Content-Type": "application/json" } : {}),
+      },
+      // Endpoint-ul de returnare integrală ignoră orice body și returnează TOT.
+      body: isPartial ? JSON.stringify({ amount }) : undefined,
+      cache: "no-store",
+    });
+
+    if (res.status === 204) {
+      return {
+        ok: true,
+        message: isPartial
+          ? `Returnare de ${amount!.toFixed(2)} MDL acceptată de bancă.`
+          : "Returnare integrală acceptată de bancă.",
+      };
+    }
+    if (res.status === 404) {
+      return {
+        ok: false,
+        message: "Tranzacția nu a fost găsită sau a fost deja returnată (se poate o singură dată).",
+      };
+    }
+    return { ok: false, message: `Banca a respins returnarea (HTTP ${res.status}).` };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Returnarea a eșuat.",
+    };
+  }
+}
+
 /** Întreabă banca statusul QR-ului. Nu aruncă — întoarce null la eșec. */
 export async function getQrStatus(qrHeaderUUID: string): Promise<QrStatusResult | null> {
   if (!isVictoriaBankConfigured || !qrHeaderUUID) return null;

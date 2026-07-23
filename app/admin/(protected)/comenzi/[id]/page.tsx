@@ -5,6 +5,7 @@ import { getOrderById } from "@/lib/admin/orders";
 import { updateOrderStatus } from "@/lib/actions/admin-orders";
 import { formatPrice } from "@/lib/format";
 import { AwbPanel } from "@/components/admin/AwbPanel";
+import { RefundPanel } from "@/components/admin/RefundPanel";
 import {
   OrderStatusBadge,
   PaymentStatusBadge,
@@ -106,17 +107,24 @@ export default async function AdminOrderDetailPage({ params }: PageProps) {
               <div className="flex justify-between gap-4">
                 <dt className="text-slate-500">Comandă creată</dt>
                 <dd className="text-right text-slate-900">
-                  {new Date(order.createdAt).toLocaleString("ro-RO")}
+                  {new Date(order.createdAt).toLocaleString("ro-RO", { timeZone: "Europe/Chisinau" })}
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
                 <dt className="text-slate-500">Ultima actualizare</dt>
                 <dd className="text-right text-slate-900">
-                  {new Date(order.updatedAt).toLocaleString("ro-RO")}
+                  {new Date(order.updatedAt).toLocaleString("ro-RO", { timeZone: "Europe/Chisinau" })}
                 </dd>
               </div>
             </dl>
           </section>
+
+          <RefundPanel
+            orderId={order.id}
+            total={order.total}
+            paymentStatus={order.paymentStatus}
+            hasPaymentReference={Boolean(order.paymentId)}
+          />
 
           <AwbPanel
             orderId={order.id}

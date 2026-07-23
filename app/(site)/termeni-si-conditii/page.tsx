@@ -16,19 +16,19 @@ const sections = [
   },
   {
     title: "3. Comanda și confirmarea",
-    body: "O comandă este considerată confirmată după finalizarea plății sau, în cazul rambursului la livrare, după validarea telefonică a datelor de livrare.",
+    body: "O comandă este considerată confirmată după finalizarea plății online sau, în cazul plății la livrare (card ori numerar), după înregistrarea comenzii. Îți trimitem confirmarea pe email.",
   },
   {
     title: "4. Livrarea",
-    body: "Livrăm în toată Moldova, în termen de 1-3 zile lucrătoare de la confirmarea comenzii. Detalii complete despre costuri și termene găsești pe pagina Livrare și plată.",
+    body: "Livrarea este asigurată de FAN Courier, în toată Republica Moldova, în 1-3 zile lucrătoare de la confirmarea comenzii. După expediere primești un număr AWB cu care poți urmări coletul. Termenele de livrare și eventualele întârzieri cauzate de curier sunt guvernate de condițiile de transport ale FAN Courier. Detalii despre costuri găsești pe pagina Livrare și plată.",
   },
   {
     title: "5. Plata",
-    body: "Acceptăm plata ramburs la livrare. Plata online cu cardul va fi disponibilă în curând; toate tranzacțiile online vor fi procesate criptat, prin conexiuni securizate.",
+    body: "Acceptăm trei metode: (a) plata online pe site prin MIA — sistemul de plăți instant al Băncii Naționale a Moldovei, operat prin VictoriaBank, unde scanezi un cod QR și confirmi plata în aplicația băncii tale; (b) plata cu cardul la livrare, la curier; (c) plata în numerar la livrare. Pentru plata online, noi nu vedem și nu stocăm datele cardului sau ale contului tău — tranzacția se desfășoară integral în aplicația băncii tale. Plățile se efectuează în lei moldovenești (MDL).",
   },
   {
     title: "6. Dreptul de retur",
-    body: "Ai dreptul să returnezi produsele în termen de 14 zile calendaristice de la primirea comenzii, conform politicii descrise pe pagina Retur și rambursare.",
+    body: "Ai dreptul să returnezi produsele în termen de 14 zile calendaristice de la primirea comenzii, conform politicii descrise pe pagina Retur și rambursare. Pentru comenzile achitate online prin MIA, rambursarea se face pe același cont din care a fost efectuată plata. Conform regulilor sistemului, o plată poate fi rambursată o singură dată; rambursarea se procesează integral sau parțial, într-o singură operațiune.",
   },
   {
     title: "7. Limitarea răspunderii",

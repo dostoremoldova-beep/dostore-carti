@@ -73,7 +73,7 @@ export default async function AdminOrdersPage({ searchParams }: PageProps) {
                 </td>
                 <td className="px-4 py-3 text-slate-700">{order.customerName}</td>
                 <td className="px-4 py-3 text-slate-500">
-                  {new Date(order.createdAt).toLocaleDateString("ro-RO")}
+                  {new Date(order.createdAt).toLocaleDateString("ro-RO", { timeZone: "Europe/Chisinau" })}
                 </td>
                 <td className="px-4 py-3 text-slate-900">{formatPrice(order.total)}</td>
                 <td className="px-4 py-3">

@@ -16,7 +16,7 @@ const sections = [
   },
   {
     title: "3. Partajarea datelor",
-    body: "Datele de livrare sunt partajate cu firma de curierat care îți livrează comanda. Nu vindem și nu închiriem datele tale personale către terți în scopuri de marketing.",
+    body: "Transmitem datele strict cât e nevoie ca să primești comanda: (a) către FAN Courier — nume, telefon, adresă și localitate, pentru generarea AWB-ului și livrare; (b) către VictoriaBank / sistemul MIA — doar suma și un identificator al comenzii, atunci când plătești online. Datele contului sau ale cardului tău NU trec prin site-ul nostru. Nu vindem și nu închiriem datele tale personale către terți în scopuri de marketing.",
   },
   {
     title: "4. Securitatea datelor",
@@ -28,7 +28,7 @@ const sections = [
   },
   {
     title: "6. Cookie-uri",
-    body: "Folosim cookie-uri strict necesare pentru funcționarea coșului de cumpărături și a sesiunii de autentificare din panoul de administrare.",
+    body: "Folosim două categorii: (a) cookie-uri strict necesare — pentru coșul de cumpărături, favorite și sesiunea de autentificare din panoul de administrare; acestea nu pot fi dezactivate, fără ele site-ul nu funcționează; (b) cookie-uri de analiză — ne arată ce pagini sunt vizitate, ca să îmbunătățim magazinul. Cele de analiză se încarcă DOAR după ce le accepți din bannerul afișat la prima vizită. Poți refuza fără ca site-ul să fie afectat, iar alegerea ta se păstrează în browserul tău.",
   },
 ];
 
