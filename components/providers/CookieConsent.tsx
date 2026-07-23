@@ -18,7 +18,9 @@ export function CookieConsent() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    // Citim după montare ca să nu producem hydration mismatch.
+    // Citim după montare ca să nu producem hydration mismatch (localStorage nu
+    // există pe server, deci nu putem decide vizibilitatea la randare).
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- citire din localStorage post-montare
     if (!localStorage.getItem(STORAGE_KEY)) setVisible(true);
   }, []);
 
