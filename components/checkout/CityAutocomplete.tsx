@@ -15,10 +15,13 @@ export function CityAutocomplete({
   defaultCity = "",
   defaultCounty = "",
   inputClassName,
+  onValueChange,
 }: {
   defaultCity?: string;
   defaultCounty?: string;
   inputClassName?: string;
+  /** Anunță părintele la fiecare schimbare — folosit pentru validarea "formular complet". */
+  onValueChange?: (city: string) => void;
 }) {
   const [value, setValue] = useState(defaultCity);
   const [county, setCounty] = useState(defaultCounty);
@@ -71,6 +74,7 @@ export function CityAutocomplete({
     setCounty(suggestion.county);
     setOpen(false);
     setSuggestions([]);
+    onValueChange?.(suggestion.city);
   }
 
   return (
@@ -83,6 +87,7 @@ export function CityAutocomplete({
           setValue(event.target.value);
           setCounty(""); // orice editare manuală invalidează raionul dedus
           setOpen(true);
+          onValueChange?.(event.target.value);
         }}
         onFocus={() => setOpen(true)}
         autoComplete="address-level2"

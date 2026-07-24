@@ -2,10 +2,13 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Menu, X, Phone, Clock } from "lucide-react";
+import Image from "next/image";
+import { Menu, X, Phone, Clock, ArrowRight } from "lucide-react";
+import type { Category } from "@prisma/client";
 import { secondaryNavLinks } from "@/lib/nav-links";
+import { CategoryIcon } from "@/components/CategoryIcon";
 
-export function MobileMenu() {
+export function MobileMenu({ categories }: { categories: Category[] }) {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -57,21 +60,51 @@ export function MobileMenu() {
               </button>
             </div>
 
-            <nav aria-label="Navigație mobilă" className="flex flex-col gap-1 overflow-y-auto px-2 py-4">
-              {secondaryNavLinks.map((link) => (
+            <nav aria-label="Navigație mobilă" className="flex flex-col overflow-y-auto px-2 py-4">
+              {/* Categoriile, câte una pe rând, cu imaginea fiecăreia — accesibile
+                  direct din meniu, fără să mai treci printr-o pagină separată. */}
+              <p className="px-3 pb-1.5 text-xs font-semibold uppercase tracking-widest text-cream/50">
+                Categorii
+              </p>
+              {categories.map((category) => (
                 <Link
-                  key={link.href}
-                  href={link.href}
+                  key={category.id}
+                  href={`/carti?categorii=${category.slug}`}
                   onClick={() => setOpen(false)}
-                  className="rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-cream/10 hover:text-gold"
+                  className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-cream/10 hover:text-gold"
                 >
-                  {link.label}
+                  {category.image ? (
+                    <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full bg-cream/10">
+                      <Image src={category.image} alt="" fill sizes="36px" className="object-cover" />
+                    </span>
+                  ) : (
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-cream/10">
+                      <CategoryIcon slug={category.slug} name={category.name} className="h-4 w-4" />
+                    </span>
+                  )}
+                  <span className="flex-1">{category.name}</span>
+                  <ArrowRight className="h-4 w-4 shrink-0 opacity-60" aria-hidden="true" />
                 </Link>
               ))}
+
+              <div className="my-3 border-t border-cream/10" />
+
+              {secondaryNavLinks
+                .filter((link) => link.href !== "/categorii")
+                .map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setOpen(false)}
+                    className="rounded-md px-3 py-2.5 text-sm font-medium transition-colors hover:bg-cream/10 hover:text-gold"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
             </nav>
 
             <div className="mt-auto space-y-2 border-t border-cream/10 px-4 py-4 text-sm text-cream/80">
-              <a href="tel:+37322000000" className="flex items-center gap-2 hover:text-gold">
+              <a href="tel:+37368812853" className="flex items-center gap-2 hover:text-gold">
                 <Phone className="h-4 w-4" aria-hidden="true" />
                 +373 068 812 853
               </a>

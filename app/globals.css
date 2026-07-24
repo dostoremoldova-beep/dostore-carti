@@ -79,3 +79,15 @@ html {
 .admin-scope ::-webkit-scrollbar-thumb:hover {
   background: var(--color-navy);
 }
+
+/* Mega-meniul de categorii din bara de navigare: se deschide DOAR la hover pe
+   butonul „Categorii" sau pe panoul însuși (ca să poți muta mausul din buton
+   spre listă fără să se închidă) — NU la hover oriunde altundeva în bară.
+   Cu `group` pe toată bara (varianta veche), orice hover peste "Bestsellers"
+   etc. deschidea și el panoul — bug reparat aici prin :has(). */
+.categories-menu:has(.categories-trigger:hover) .categories-panel,
+.categories-menu:has(.categories-trigger:focus-visible) .categories-panel,
+.categories-menu:has(.categories-panel:hover) .categories-panel {
+  visibility: visible;
+  opacity: 1;
+}

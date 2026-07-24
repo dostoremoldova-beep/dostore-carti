@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
@@ -10,6 +10,12 @@ import { formatPrice } from "@/lib/format";
 import { CityAutocomplete } from "./CityAutocomplete";
 
 const initialState: CheckoutState = { status: "idle" };
+
+// Oglindesc regulile din lib/actions/checkout.ts — folosite DOAR ca să
+// activăm/dezactivăm butonul (validarea reală, care contează, rămâne pe
+// server; asta e strict UX, nu o barieră de securitate).
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^[0-9+\s()-]{6,20}$/;
 
 const PAYMENT_METHODS = [
   {
@@ -36,18 +42,70 @@ const FIELDS: {
   label: string;
   type: string;
   autoComplete: string;
+  placeholder: string;
   colSpan?: boolean;
 }[] = [
-  { name: "customerName", label: "Nume complet", type: "text", autoComplete: "name", colSpan: true },
-  { name: "email", label: "Email", type: "email", autoComplete: "email" },
-  { name: "phone", label: "Telefon", type: "tel", autoComplete: "tel" },
-  { name: "shippingAddress", label: "Adresă de livrare", type: "text", autoComplete: "street-address", colSpan: true },
+  {
+    name: "customerName",
+    label: "Nume complet",
+    type: "text",
+    autoComplete: "name",
+    placeholder: "Ion Popescu",
+    colSpan: true,
+  },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    autoComplete: "email",
+    placeholder: "ion.popescu@gmail.com",
+  },
+  {
+    name: "phone",
+    label: "Telefon",
+    type: "tel",
+    autoComplete: "tel",
+    placeholder: "069 123 456",
+  },
+  {
+    name: "shippingAddress",
+    label: "Adresă de livrare",
+    type: "text",
+    autoComplete: "street-address",
+    placeholder: "Str. Ștefan cel Mare 12, ap. 5",
+    colSpan: true,
+  },
 ];
 
 export function CheckoutView() {
   const items = useCartStore((state) => state.items);
   const boundAction = createOrderAndPay.bind(null, items);
   const [state, formAction, pending] = useActionState(boundAction, initialState);
+
+  // Urmărite DOAR ca să știm când formularul e complet — inputurile rămân
+  // necontrolate (defaultValue), ca să nu riscăm sărituri de cursor la fiecare
+  // tastă. Butonul de trimitere rămâne transparent/inactiv până toate sunt
+  // valide, exact ca validarea de pe server (vezi lib/actions/checkout.ts).
+  const [values, setValues] = useState({
+    customerName: state.values?.customerName ?? "",
+    email: state.values?.email ?? "",
+    phone: state.values?.phone ?? "",
+    shippingAddress: state.values?.shippingAddress ?? "",
+    city: state.values?.city ?? "",
+  });
+  const [termsChecked, setTermsChecked] = useState(state.values?.terms === "on");
+
+  function updateField(name: keyof typeof values, value: string) {
+    setValues((current) => ({ ...current, [name]: value }));
+  }
+
+  const isFormComplete =
+    values.customerName.trim().length >= 3 &&
+    EMAIL_REGEX.test(values.email.trim()) &&
+    PHONE_REGEX.test(values.phone.trim()) &&
+    values.shippingAddress.trim().length >= 5 &&
+    values.city.trim().length >= 2 &&
+    termsChecked;
 
   if (items.length === 0) {
     return (
@@ -106,10 +164,12 @@ export function CheckoutView() {
                   name={field.name}
                   type={field.type}
                   autoComplete={field.autoComplete}
+                  placeholder={field.placeholder}
                   defaultValue={state.values?.[field.name] ?? ""}
+                  onChange={(event) => updateField(field.name, event.target.value)}
                   aria-invalid={Boolean(state.fieldErrors?.[field.name])}
                   aria-describedby={state.fieldErrors?.[field.name] ? `${field.name}-error` : undefined}
-                  className={`w-full rounded-lg border bg-card px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-terracotta/30 ${
+                  className={`w-full rounded-lg border bg-card px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 focus:outline-none focus:ring-2 focus:ring-terracotta/30 ${
                     state.fieldErrors?.[field.name]
                       ? "border-terracotta"
                       : "border-border focus:border-terracotta"
@@ -130,7 +190,8 @@ export function CheckoutView() {
               <CityAutocomplete
                 defaultCity={state.values?.city ?? ""}
                 defaultCounty={state.values?.county ?? ""}
-                inputClassName={`w-full rounded-lg border bg-card px-3.5 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-terracotta/30 ${
+                onValueChange={(city) => updateField("city", city)}
+                inputClassName={`w-full rounded-lg border bg-card px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-soft/50 focus:outline-none focus:ring-2 focus:ring-terracotta/30 ${
                   state.fieldErrors?.city
                     ? "border-terracotta"
                     : "border-border focus:border-terracotta"
@@ -175,7 +236,8 @@ export function CheckoutView() {
               <input
                 type="checkbox"
                 name="terms"
-                defaultChecked={state.values?.terms === "on"}
+                checked={termsChecked}
+                onChange={(event) => setTermsChecked(event.target.checked)}
                 aria-invalid={Boolean(state.fieldErrors?.terms)}
                 className="mt-0.5 h-4.5 w-4.5 shrink-0 rounded border-border accent-terracotta"
               />
@@ -212,8 +274,9 @@ export function CheckoutView() {
 
           <button
             type="submit"
-            disabled={pending}
-            className="flex w-full items-center justify-center rounded-full bg-terracotta px-7 py-3.5 font-semibold text-cream transition-colors hover:bg-terracotta-dark disabled:opacity-60"
+            disabled={pending || !isFormComplete}
+            title={!isFormComplete ? "Completează toate datele și bifează acordul mai sus" : undefined}
+            className="flex w-full items-center justify-center rounded-full bg-terracotta px-7 py-3.5 font-semibold text-cream transition-opacity hover:bg-terracotta-dark disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-terracotta"
           >
             {pending ? "Se procesează..." : `Trimite comanda · ${formatPrice(total)}`}
           </button>
