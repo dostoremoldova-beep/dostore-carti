@@ -33,8 +33,11 @@ export function CategoriesTrigger() {
 export function CategoriesPanel({ categories }: { categories: Category[] }) {
   return (
     <div className="categories-panel invisible absolute inset-x-0 top-full z-50 pt-2.5 opacity-0 transition-[opacity,visibility] duration-150">
+      {/* Același container (mx-auto max-w-7xl px-…) ca rândul din bară, ca
+          marginea din stânga să cadă exact sub buton — fără mx-auto pe cutia
+          albă, altfel s-ar centra pe toată lățimea paginii, nu sub buton. */}
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-md rounded-xl border border-border bg-card p-3 shadow-xl">
+        <div className="max-w-xs rounded-xl border border-border bg-card p-3 shadow-xl">
           <div className="flex flex-col gap-1">
             {categories.map((category) => (
               <Link
